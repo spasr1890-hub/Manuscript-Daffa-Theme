@@ -63,6 +63,11 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
      */
     public function init()
     {
+        // Register first, so a failure further down can not leave the page
+        // unprocessed, and early, so the output filter is in place even when
+        // a later plugin renders the page itself.
+        Hook::add('TemplateManager::display', $this->handleDisplay(...), Hook::SEQUENCE_CORE);
+
         // Initialize the parent theme
         $this->setParent('defaultthemeplugin');
 
@@ -122,9 +127,11 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         $this->addScript('manuscriptDaffa', 'js/manuscriptDaffa.js');
 
         // Back end helpers, only for logged-in users
-        $this->addAdminScript();
-
-        Hook::add('TemplateManager::display', $this->handleDisplay(...));
+        try {
+            $this->addAdminScript();
+        } catch (Throwable $e) {
+            error_log('manuscriptDaffa admin script: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -500,7 +507,16 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
      */
     public function filterOutput(string $html, $smartyTemplate = null): string
     {
-        if (!str_contains($html, '</body>') || !str_contains($html, '<html')) {
+        // Output filters also run for every fragment rendered with fetch()
+        // while the page is displayed (sidebar blocks, for example). Only the
+        // displayed page template is changed, even when a block contains a
+        // complete HTML document of its own.
+        $template = $this->page['template'] ?? '';
+        $resource = is_object($smartyTemplate) ? (string) ($smartyTemplate->template_resource ?? '') : '';
+        if ($template === '' || ($resource !== '' && !str_ends_with($resource, $template))) {
+            return $html;
+        }
+        if (!str_contains($html, '</body>')) {
             return $html;
         }
         if (!empty($this->page['done'])) {
@@ -1059,7 +1075,12 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         $request = Application::get()->getRequest();
         $user = $request->getUser();
         $context = $this->page['context'] ?? null;
-        if (!$user || !$context || !$user->hasRole([Role::ROLE_ID_MANAGER, Role::ROLE_ID_SITE_ADMIN], (int) $context->getId())) {
+        if (!$user || !$context) {
+            return $html;
+        }
+        $isManager = $user->hasRole([Role::ROLE_ID_MANAGER, Role::ROLE_ID_SITE_ADMIN], (int) $context->getId())
+            || $user->hasRole([Role::ROLE_ID_SITE_ADMIN], Application::SITE_CONTEXT_ID);
+        if (!$isManager) {
             return $html;
         }
         $lines = $this->page['diagnostics'] ?? [];
