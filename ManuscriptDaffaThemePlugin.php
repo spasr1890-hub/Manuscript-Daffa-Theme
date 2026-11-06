@@ -317,7 +317,11 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
             error_log('manuscriptDaffa: ' . $e->getMessage());
         }
 
-        $templateMgr->registerFilter('output', $this->filterOutput(...));
+        // Smarty stores output filters by name and gives every closure the
+        // same name ("closure"), so an unnamed filter would replace, or be
+        // replaced by, another plugin's (e.g. Publication Facts Label on the
+        // article page). Register under our own name.
+        $templateMgr->registerFilter('output', $this->filterOutput(...), 'manuscriptDaffa');
 
         return Hook::CONTINUE;
     }
@@ -567,10 +571,11 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         if ($start === false) {
             return $html;
         }
-        $ulStart = strpos($html, '<ul class="authors">', $start);
-        if ($ulStart === false) {
+        // Other plugins may add attributes (PFL: <ul id="author-list" class="authors">)
+        if (!preg_match('~<ul\b[^>]*\bclass="authors"[^>]*>~', $html, $um, PREG_OFFSET_CAPTURE, $start)) {
             return $html;
         }
+        $ulStart = $um[0][1];
         $ulEnd = Html::elementEnd($html, $ulStart, 'ul');
         if ($ulEnd === null) {
             return $html;
