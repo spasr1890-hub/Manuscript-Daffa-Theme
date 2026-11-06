@@ -19,6 +19,8 @@
 	--msd-list-gap: .2rem;
 	/* Extra size of article titles in lists */
 	--msd-title-bump: 2px;
+	/* Text size of article lists (theme option "Article list text size") */
+	--msd-list-scale: 1;
 }
 
 /* Article page: authors, affiliation and country */
@@ -101,19 +103,22 @@
 
 /* Article lists: title size, spacing, action row, abstract */
 .obj_article_summary > .title {
-	font-size: calc(1em + var(--msd-title-bump));
+	font-size: calc(1rem * var(--msd-list-scale) + var(--msd-title-bump));
+	line-height: 1.35;
 	margin-bottom: 0;
 }
 .obj_article_summary > .meta {
 	margin-top: var(--msd-list-gap);
 	padding-top: 0;
+	font-size: calc(.93rem * var(--msd-list-scale));
+	line-height: 1.5;
 }
 .msd-actions {
 	display: flex;
 	flex-wrap: wrap;
 	gap: .35rem;
 	margin-top: var(--msd-list-gap);
-	font-size: .8rem;
+	font-size: calc(.8rem * var(--msd-list-scale));
 	line-height: 1.4;
 }
 .msd-act,
@@ -170,7 +175,8 @@
 	padding: .5rem .75rem;
 	border-left: 3px solid var(--msd-accent);
 	background: rgba(0, 0, 0, .03);
-	font-size: .9rem;
+	font-size: calc(.9rem * var(--msd-list-scale));
+	line-height: 1.6;
 }
 .msd-abstract p:first-child {
 	margin-top: 0;

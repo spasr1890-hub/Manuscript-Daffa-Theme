@@ -46,6 +46,9 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
     /** Files from this size (bytes) are marked in the back end file lists */
     public const LARGE_FILE_BYTES = 5 * 1024 * 1024;
 
+    /** Article list text size option: value => scale factor */
+    public const ARTICLE_LIST_SIZES = ['small' => 0.9, 'medium' => 1, 'large' => 1.12, 'xlarge' => 1.25];
+
     /** Choices of the header logo height option (desktop) */
     public const HEADER_LOGO_HEIGHTS = ['80', '100', '120', '150', 'full'];
 
@@ -91,6 +94,18 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         // Home country of the journal (foreign author percentage)
         $this->addHomeCountryOption();
 
+        // Text size of article lists (title, authors, buttons, abstract)
+        $this->addOption('articleListSize', 'FieldOptions', [
+            'type' => 'radio',
+            'label' => __('plugins.themes.manuscriptDaffa.option.articleListSize.label'),
+            'description' => __('plugins.themes.manuscriptDaffa.option.articleListSize.description'),
+            'options' => array_map(fn ($value) => [
+                'value' => $value,
+                'label' => __('plugins.themes.manuscriptDaffa.option.articleListSize.' . $value),
+            ], array_keys(self::ARTICLE_LIST_SIZES)),
+            'default' => 'medium',
+        ]);
+
         // Height of the header logo on desktop screens
         $this->addOption('headerLogoHeight', 'FieldOptions', [
             'type' => 'radio',
@@ -135,6 +150,7 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
             'manuscriptDaffaColours',
             ':root{--msd-primary:' . $baseColour . ';--msd-accent:' . $accentColour
                 . ';--msd-on-primary:' . ($this->isColourDark($baseColour) ? '#fff' : 'rgba(0,0,0,.84)') . ';}'
+                . $this->articleListSizeCss()
                 . $this->headerLogoCss(),
             ['inline' => true]
         );
@@ -158,6 +174,9 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         // pkp/pkp-lib#11974
         if (in_array($name, ['baseColour', 'accentColour']) && !preg_match('/^#[0-9a-fA-F]{1,6}$/', (string) $value)) {
             $value = null;
+        }
+        if ($name === 'articleListSize' && !isset(self::ARTICLE_LIST_SIZES[(string) $value])) {
+            $value = 'medium';
         }
         if ($name === 'headerLogoHeight' && !in_array((string) $value, self::HEADER_LOGO_HEIGHTS, true)) {
             $value = '80';
@@ -204,6 +223,17 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
     protected function safeColour($colour, string $default): string
     {
         return is_string($colour) && preg_match('/^#[0-9a-fA-F]{1,6}$/', $colour) ? $colour : $default;
+    }
+
+    /**
+     * CSS for the article list text size option: one scale factor for the
+     * title, authors, action buttons and abstract (styles/manuscriptDaffa.css).
+     */
+    protected function articleListSizeCss(): string
+    {
+        $size = (string) $this->getOption('articleListSize');
+        $scale = self::ARTICLE_LIST_SIZES[$size] ?? 1;
+        return $scale == 1 ? '' : ':root{--msd-list-scale:' . $scale . '}';
     }
 
     /**
