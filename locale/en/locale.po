@@ -121,3 +121,21 @@ msgstr "150 px"
 
 msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.full"
 msgstr "Full width of the header (banner)"
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.label"
+msgstr "Article list text size"
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.description"
+msgstr "Size of the text in article lists (homepage, issue table of contents, search results): title, authors, action buttons and abstract change together."
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.small"
+msgstr "Small"
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.medium"
+msgstr "Medium (default)"
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.large"
+msgstr "Large"
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.xlarge"
+msgstr "Extra large"

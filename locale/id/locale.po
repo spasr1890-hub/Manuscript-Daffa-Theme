@@ -121,3 +121,21 @@ msgstr "150 px"
 
 msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.full"
 msgstr "Selebar header (banner)"
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.label"
+msgstr "Ukuran huruf daftar artikel"
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.description"
+msgstr "Ukuran teks pada daftar artikel (beranda, daftar isi terbitan, hasil pencarian): judul, nama penulis, tombol aksi, dan abstrak berubah bersama."
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.small"
+msgstr "Kecil"
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.medium"
+msgstr "Sedang (bawaan)"
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.large"
+msgstr "Besar"
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.xlarge"
+msgstr "Sangat besar"

@@ -46,6 +46,9 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
     /** Files from this size (bytes) are marked in the back end file lists */
     public const LARGE_FILE_BYTES = 5 * 1024 * 1024;
 
+    /** Article list text size option: value => scale factor */
+    public const ARTICLE_LIST_SIZES = ['small' => 0.9, 'medium' => 1, 'large' => 1.12, 'xlarge' => 1.25];
+
     /** Choices of the header logo height option (desktop) */
     public const HEADER_LOGO_HEIGHTS = ['80', '100', '120', '150', 'full'];
 
@@ -91,6 +94,18 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         // Home country of the journal (foreign author percentage)
         $this->addHomeCountryOption();
 
+        // Text size of article lists (title, authors, buttons, abstract)
+        $this->addOption('articleListSize', 'FieldOptions', [
+            'type' => 'radio',
+            'label' => __('plugins.themes.manuscriptDaffa.option.articleListSize.label'),
+            'description' => __('plugins.themes.manuscriptDaffa.option.articleListSize.description'),
+            'options' => array_map(fn ($value) => [
+                'value' => $value,
+                'label' => __('plugins.themes.manuscriptDaffa.option.articleListSize.' . $value),
+            ], array_keys(self::ARTICLE_LIST_SIZES)),
+            'default' => 'medium',
+        ]);
+
         // Height of the header logo on desktop screens
         $this->addOption('headerLogoHeight', 'FieldOptions', [
             'type' => 'radio',
@@ -130,17 +145,18 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         $this->modifyStyle('stylesheet', ['addLessVariables' => join('', $additionalLessVariables)]);
 
         // Feature styles follow the colours chosen in OJS
-        $this->addStyle('manuscriptDaffa', 'styles/manuscriptDaffa.css');
+        $this->addStyle('manuscriptDaffa', $this->versioned('styles/manuscriptDaffa.css'));
         $this->addStyle(
             'manuscriptDaffaColours',
             ':root{--msd-primary:' . $baseColour . ';--msd-accent:' . $accentColour
                 . ';--msd-on-primary:' . ($this->isColourDark($baseColour) ? '#fff' : 'rgba(0,0,0,.84)') . ';}'
+                . $this->articleListSizeCss()
                 . $this->headerLogoCss(),
             ['inline' => true]
         );
 
         // Front end behaviour (abstract toggle, "Read more")
-        $this->addScript('manuscriptDaffa', 'js/manuscriptDaffa.js');
+        $this->addScript('manuscriptDaffa', $this->versioned('js/manuscriptDaffa.js'));
 
         // Back end helpers, only for logged-in users
         try {
@@ -158,6 +174,9 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         // pkp/pkp-lib#11974
         if (in_array($name, ['baseColour', 'accentColour']) && !preg_match('/^#[0-9a-fA-F]{1,6}$/', (string) $value)) {
             $value = null;
+        }
+        if ($name === 'articleListSize' && !isset(self::ARTICLE_LIST_SIZES[(string) $value])) {
+            $value = 'medium';
         }
         if ($name === 'headerLogoHeight' && !in_array((string) $value, self::HEADER_LOGO_HEIGHTS, true)) {
             $value = '80';
@@ -204,6 +223,17 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
     protected function safeColour($colour, string $default): string
     {
         return is_string($colour) && preg_match('/^#[0-9a-fA-F]{1,6}$/', $colour) ? $colour : $default;
+    }
+
+    /**
+     * CSS for the article list text size option: one scale factor for the
+     * title, authors, action buttons and abstract (styles/manuscriptDaffa.css).
+     */
+    protected function articleListSizeCss(): string
+    {
+        $size = (string) $this->getOption('articleListSize');
+        $scale = self::ARTICLE_LIST_SIZES[$size] ?? 1;
+        return $scale == 1 ? '' : ':root{--msd-list-scale:' . $scale . '}';
     }
 
     /**
@@ -300,7 +330,7 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
             'window.manuscriptDaffaAdmin = ' . json_encode($config, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP) . ';',
             ['inline' => true, 'contexts' => 'backend']
         );
-        $this->addScript('manuscriptDaffaAdmin', 'js/manuscriptDaffaAdmin.js', ['contexts' => 'backend']);
+        $this->addScript('manuscriptDaffaAdmin', $this->versioned('js/manuscriptDaffaAdmin.js'), ['contexts' => 'backend']);
     }
 
     /*
@@ -1147,8 +1177,24 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
 
     protected function getVersionString(): string
     {
-        $version = @simplexml_load_file($this->getPluginPath() . '/version.xml');
-        return $version ? (string) $version->release : '';
+        static $release = null;
+        if ($release === null) {
+            $version = @simplexml_load_file($this->getPluginPath() . '/version.xml');
+            $release = $version ? (string) $version->release : '';
+        }
+        return $release;
+    }
+
+    /**
+     * Asset path with the theme version, so browsers and CDNs (Cloudflare)
+     * load the new file after every theme update. OJS only adds its own
+     * "?v=<OJS version>" when the path has no query, and that value does
+     * not change when the theme is updated.
+     */
+    protected function versioned(string $path): string
+    {
+        $release = $this->getVersionString();
+        return $release !== '' ? $path . '?v=' . rawurlencode($release) : $path;
     }
 
     protected function url(string $page, string $op, array $path = [], ?string $contextPath = null): string
