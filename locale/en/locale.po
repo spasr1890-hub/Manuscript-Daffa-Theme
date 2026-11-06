@@ -100,3 +100,24 @@ msgstr "Clear selection"
 
 msgid "plugins.themes.manuscriptDaffa.admin.largeFile"
 msgstr "Large file (5 MB or more), often caused by fonts embedded in a Word document"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.label"
+msgstr "Header logo height"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.description"
+msgstr "Height of the logo in the header on desktop screens (992 px and wider). Upload a logo about twice the chosen size so it stays sharp; \"Full width\" works best for a wide banner (about 2200 px wide). Small screens always use the compact header."
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.80"
+msgstr "80 px (default)"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.100"
+msgstr "100 px"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.120"
+msgstr "120 px"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.150"
+msgstr "150 px"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.full"
+msgstr "Full width of the header (banner)"

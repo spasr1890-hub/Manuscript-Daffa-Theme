@@ -192,6 +192,28 @@
 			}
 		}
 		cell.appendChild(size);
+		centerUnder(size, cell);
+	}
+
+	/**
+	 * Center the size under the first visible element of the cell (the file
+	 * type badge, or the date in the reviewer list).
+	 */
+	function centerUnder(size, cell) {
+		for (var el = cell.firstElementChild; el; el = el.nextElementSibling) {
+			if (el === size || !el.getClientRects().length) {
+				continue;
+			}
+			var width = el.getBoundingClientRect().width;
+			if (width > 0) {
+				// Block-level but only as wide as needed: at least the badge
+				// width, wider when the size text is longer than the badge
+				size.style.display = 'table';
+				size.style.minWidth = Math.round(width) + 'px';
+				size.style.textAlign = 'center';
+			}
+			return;
+		}
 	}
 
 	function fileRows() {
