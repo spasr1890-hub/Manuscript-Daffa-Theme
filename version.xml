@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE version SYSTEM "../../../lib/pkp/dtd/pluginVersion.dtd">
+
+<!--
+  * plugins/themes/manuscriptDaffa/version.xml
+  *
+  * Distributed under the GNU GPL v3. For full terms see the file LICENSE.
+  *
+  * Plugin version information.
+  -->
+<version>
+	<!-- Must match the plugin folder name: plugins/themes/manuscriptDaffa -->
+	<application>manuscriptDaffa</application>
+	<type>plugins.themes</type>
+	<release>1.0.0.0</release>
+	<date>2026-11-06</date>
+	<lazy-load>1</lazy-load>
+	<class>ManuscriptDaffaThemePlugin</class>
+</version>
