@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @defgroup plugins_themes_manuscriptDaffa Manuscript Daffa theme plugin
+ * @defgroup plugins_themes_manuscriptDaffa Manuscript-Daffa theme plugin
  */
 
 /**
@@ -13,7 +13,7 @@
  *
  * @ingroup plugins_themes_manuscriptDaffa
  *
- * @brief Wrapper for the Manuscript Daffa theme plugin.
+ * @brief Wrapper for the Manuscript-Daffa theme plugin.
  */
 
 return new \APP\plugins\themes\manuscriptDaffa\ManuscriptDaffaThemePlugin();

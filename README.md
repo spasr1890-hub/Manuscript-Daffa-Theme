@@ -1,10 +1,10 @@
-# Manuscript Daffa Theme untuk OJS 3.5
+# Manuscript-Daffa Theme untuk OJS 3.5
 
 Child theme dari **Default Theme** OJS 3.5, dibangun dari [Manuscript (pkp/defaultManuscript)](https://github.com/pkp/defaultManuscript), cabang `stable-3_5_0`. Tampilan Manuscript (tata letak "kertas", font lokal Montserrat/Noto Serif) tetap, ditambah fitur di bawah. Tidak ada template inti OJS yang disalin: tema menyiapkan data saat halaman ditampilkan (`handleDisplay`) lalu mengubah HTML hasil template Default Theme lewat *output filter* Smarty. Tambahan aset: satu berkas CSS kecil (`styles/manuscriptDaffa.css`), satu skrip publik kecil (`js/manuscriptDaffa.js`), satu skrip admin (`js/manuscriptDaffaAdmin.js`), dan bendera SVG lokal. Tidak ada font eksternal.
 
 ## Pemasangan
 
-1. Folder plugin **harus** bernama `manuscriptDaffa`: `plugins/themes/manuscriptDaffa` (sesuai `<application>` di `version.xml` dan namespace PHP).
+1. Folder plugin **harus** bernama `manuscriptDaffa`: `plugins/themes/manuscriptDaffa` (sesuai `<application>` di `version.xml` dan namespace PHP). Nama tema yang tampil di OJS adalah **Manuscript-Daffa**; folder tidak memakai tanda hubung karena nama folder juga menjadi bagian namespace PHP, dan PHP tidak mengizinkan tanda hubung di namespace.
    - Lewat unggah: buat arsip yang berisi folder `manuscriptDaffa/` (mis. `tar -czf manuscriptDaffa.tar.gz manuscriptDaffa`), lalu *Website → Plugins → Upload A New Plugin*.
    - Lewat server: salin isi repositori ini ke `plugins/themes/manuscriptDaffa`.
 2. Aktifkan di *Website → Plugins*, lalu pilih di *Website → Appearance → Theme*.

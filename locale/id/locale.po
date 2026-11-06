@@ -12,7 +12,7 @@ msgstr ""
 "Language: id\n"
 
 msgid "plugins.themes.manuscriptDaffa.name"
-msgstr "Manuscript Daffa"
+msgstr "Manuscript-Daffa"
 
 msgid "plugins.themes.manuscriptDaffa.description"
 msgstr "Child theme Manuscript yang ringan dari Default Theme dengan cakupan terbitan, negara penulis, tombol aksi artikel, badge kutipan, dan alat bantu sisi admin."

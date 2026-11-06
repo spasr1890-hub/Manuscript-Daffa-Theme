@@ -9,7 +9,7 @@
  *
  * @class ManuscriptDaffaThemePlugin
  *
- * @brief Manuscript Daffa: the Manuscript child theme of the Default Theme
+ * @brief Manuscript-Daffa: the Manuscript child theme of the Default Theme
  *  with extra features for journals. No core template is copied: the theme
  *  prepares data when a page is displayed (handleDisplay) and changes the
  *  rendered HTML of the Default Theme templates with a Smarty output filter.

@@ -12,7 +12,7 @@ msgstr ""
 "Language: \n"
 
 msgid "plugins.themes.manuscriptDaffa.name"
-msgstr "Manuscript Daffa"
+msgstr "Manuscript-Daffa"
 
 msgid "plugins.themes.manuscriptDaffa.description"
 msgstr "Un tema limpio y sencillo con un diseño en caja que imita un documento en papel."

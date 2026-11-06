@@ -12,7 +12,7 @@ msgstr ""
 "Language: tr_TR\n"
 
 msgid "plugins.themes.manuscriptDaffa.name"
-msgstr "Manuscript Daffa"
+msgstr "Manuscript-Daffa"
 
 msgid "plugins.themes.manuscriptDaffa.description"
 msgstr "Bir dokümanı taklit eden kutulu bir tasarıma sahip temiz, basit bir tema."

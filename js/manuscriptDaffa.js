@@ -3,7 +3,7 @@
  *
  * Distributed under the GNU GPL v3. For full terms see the file LICENSE.
  *
- * Front end behaviour of the Manuscript Daffa theme:
+ * Front end behaviour of the Manuscript-Daffa theme:
  * - "Show Abstract" opens and closes the abstract in an article list;
  * - "Read more" / "Show less" unfolds the current issue on the homepage.
  * Without JavaScript both links open the article or the issue page.

@@ -3,7 +3,7 @@
  *
  * Distributed under the GNU GPL v3. For full terms see the file LICENSE.
  *
- * Back end helpers of the Manuscript Daffa theme. Loaded only in the back end
+ * Back end helpers of the Manuscript-Daffa theme. Loaded only in the back end
  * for logged-in users; does nothing on pages without the lists below.
  *
  * - "Select all / Clear selection" above the Crossref export list

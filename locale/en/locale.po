@@ -12,7 +12,7 @@ msgstr ""
 "Language: en\n"
 
 msgid "plugins.themes.manuscriptDaffa.name"
-msgstr "Manuscript Daffa"
+msgstr "Manuscript-Daffa"
 
 msgid "plugins.themes.manuscriptDaffa.description"
 msgstr "A light Manuscript child theme of the Default Theme with issue coverage, author countries, article action buttons, citation badges and back end helpers."
