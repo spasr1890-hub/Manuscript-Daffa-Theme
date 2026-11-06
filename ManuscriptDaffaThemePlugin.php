@@ -52,6 +52,12 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
     /** Choices of the header logo height option (desktop) */
     public const HEADER_LOGO_HEIGHTS = ['80', '100', '120', '150', 'full'];
 
+    /** Font preloaded on public pages (must match the URL in styles/fonts.less) */
+    public const PRELOAD_FONT = 'fonts/montserrat-v15-vietnamese_latin-ext_latin_cyrillic-ext_cyrillic-700.woff2';
+
+    /** Script of the Dimensions citation badge */
+    public const DIMENSIONS_SCRIPT = 'https://badge.dimensions.ai/badge.js';
+
     /** Request parameter of the back end file size lookup */
     public const FILE_SIZE_PARAM = 'manuscriptDaffaFileSizes';
 
@@ -366,30 +372,41 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
             'context' => $context,
             'description' => null,
             'diagnostics' => [],
+            'features' => [],
         ];
 
-        try {
-            switch ($template) {
-                case 'frontend/pages/article.tpl':
-                    $this->prepareArticle($templateMgr);
-                    break;
-                case 'frontend/pages/issue.tpl':
-                    $this->prepareIssue($templateMgr, false);
-                    break;
-                case 'frontend/pages/indexJournal.tpl':
-                    $this->prepareIssue($templateMgr, true);
-                    $this->prepareCategories($templateMgr);
-                    break;
-                case 'frontend/pages/issueArchive.tpl':
-                    $this->prepareArchive($templateMgr);
-                    break;
-            }
+        // Each preparation is guarded on its own: a failure in one (bad data
+        // in an article, for example) does not stop the others.
+        switch ($template) {
+            case 'frontend/pages/article.tpl':
+                $this->guard('prepare article', fn () => $this->prepareArticle($templateMgr));
+                break;
+            case 'frontend/pages/issue.tpl':
+                $this->guard('prepare issue', fn () => $this->prepareIssue($templateMgr, false));
+                break;
+            case 'frontend/pages/indexJournal.tpl':
+                $this->guard('prepare current issue', fn () => $this->prepareIssue($templateMgr, true));
+                $this->guard('prepare category cards', fn () => $this->prepareCategories($templateMgr));
+                break;
+            case 'frontend/pages/issueArchive.tpl':
+                $this->guard('prepare archive cards', fn () => $this->prepareArchive($templateMgr));
+                break;
+        }
+        $this->guard('prepare meta description', function () use ($context) {
             if ($this->page['description'] === null && $context) {
                 $this->page['description'] = trim($context->getLocalizedName() . '. ' . Html::excerpt($context->getLocalizedData('description'), 400), ' .');
             }
-        } catch (Throwable $e) {
-            error_log('manuscriptDaffa: ' . $e->getMessage());
-        }
+        });
+
+        // Load the bold heading font early (titles, menu): it is needed for
+        // the first view of every page, and preloading it shortens the time
+        // until the text is shown in its final font.
+        $this->guard('font preload', fn () => $templateMgr->addHeader(
+            'manuscriptDaffaFontPreload',
+            '<link rel="preload" href="' . Html::e($request->getBaseUrl() . '/' . $this->getPluginPath() . '/' . self::PRELOAD_FONT)
+                . '" as="font" type="font/woff2" crossorigin>',
+            ['contexts' => 'frontend']
+        ));
 
         // Smarty stores output filters by name and gives every closure the
         // same name ("closure"), so an unnamed filter would replace, or be
@@ -602,34 +619,69 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         }
         $this->page['done'] = true;
 
-        try {
-            $template = $this->page['template'] ?? '';
+        // One step per feature, each guarded on its own: when a step fails
+        // the page keeps the result of the other steps, and the error goes
+        // to the PHP error log and the diagnostic comment.
+        $steps = [];
+        if ($template === 'frontend/pages/article.tpl') {
+            $steps['author countries'] = $this->filterArticleAuthors(...);
+            $steps['Dimensions badge'] = $this->filterDimensions(...);
+        }
+        if (in_array($template, ['frontend/pages/issue.tpl', 'frontend/pages/indexJournal.tpl'])) {
+            $steps['issue coverage'] = $this->filterCoverage(...);
+        }
+        if ($template === 'frontend/pages/indexJournal.tpl') {
+            $steps['homepage fold'] = $this->filterHomeFold(...);
+            $steps['category cards'] = $this->filterCategories(...);
+        }
+        if ($template === 'frontend/pages/issueArchive.tpl') {
+            $steps['archive cards'] = $this->filterArchive(...);
+        }
+        if (str_contains($html, '<div class="obj_article_summary">')) {
+            $steps['article action rows'] = $this->filterArticleList(...);
+        }
+        $steps['image loading'] = $this->filterImages(...);
+        $steps['meta description'] = $this->filterMetaDescription(...);
 
-            if ($template === 'frontend/pages/article.tpl') {
-                $html = $this->filterArticleAuthors($html);
-                $html = $this->filterDimensions($html);
-            }
-            if (in_array($template, ['frontend/pages/issue.tpl', 'frontend/pages/indexJournal.tpl'])) {
-                $html = $this->filterCoverage($html);
-            }
-            if ($template === 'frontend/pages/indexJournal.tpl') {
-                $html = $this->filterHomeFold($html);
-                $html = $this->filterCategories($html);
-            }
-            if ($template === 'frontend/pages/issueArchive.tpl') {
-                $html = $this->filterArchive($html);
-            }
-            if (str_contains($html, '<div class="obj_article_summary">')) {
-                $html = $this->filterArticleList($html);
-            }
-            $html = $this->filterImages($html);
-            $html = $this->filterMetaDescription($html);
-            $html = $this->filterDiagnostics($html);
-        } catch (Throwable $e) {
-            error_log('manuscriptDaffa output: ' . $e->getMessage());
+        foreach ($steps as $name => $step) {
+            $html = $this->runStep($name, $step, $html);
         }
 
-        return $html;
+        return $this->runStep('diagnostics', $this->filterDiagnostics(...), $html);
+    }
+
+    /**
+     * Run one output step; on failure keep the HTML as it was.
+     */
+    protected function runStep(string $name, callable $step, string $html): string
+    {
+        $result = $this->guard($name, fn () => $step($html));
+        return is_string($result) ? $result : $html;
+    }
+
+    /**
+     * Run a callback, log and report a failure instead of throwing.
+     *
+     * @return mixed The callback's result, or null when it failed
+     */
+    protected function guard(string $name, callable $callback): mixed
+    {
+        try {
+            return $callback();
+        } catch (Throwable $e) {
+            $where = basename($e->getFile()) . ':' . $e->getLine();
+            error_log('manuscriptDaffa: ' . $name . ' failed on ' . ($this->page['template'] ?? '?') . ': ' . $e->getMessage() . ' (' . $where . ')');
+            $this->report($name, 'ERROR ' . $e->getMessage() . ' (' . $where . ')');
+            return null;
+        }
+    }
+
+    /**
+     * Record what a feature did on this page, for the diagnostic comment.
+     */
+    protected function report(string $feature, string $status): void
+    {
+        $this->page['features'][$feature] = $status;
     }
 
     /**
@@ -639,19 +691,23 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
     {
         $authors = $this->page['authors'] ?? [];
         if (!$authors) {
+            $this->report('author countries', 'skipped: the publication has no authors');
             return $html;
         }
         $start = strpos($html, '<section class="item authors">');
         if ($start === false) {
+            $this->report('author countries', 'skipped: author section not found (template changed by another theme or plugin?)');
             return $html;
         }
         // Other plugins may add attributes (PFL: <ul id="author-list" class="authors">)
         if (!preg_match('~<ul\b[^>]*\bclass="authors"[^>]*>~', $html, $um, PREG_OFFSET_CAPTURE, $start)) {
+            $this->report('author countries', 'skipped: author list not found');
             return $html;
         }
         $ulStart = $um[0][1];
         $ulEnd = Html::elementEnd($html, $ulStart, 'ul');
         if ($ulEnd === null) {
+            $this->report('author countries', 'skipped: author list not closed');
             return $html;
         }
         $list = substr($html, $ulStart, $ulEnd - $ulStart);
@@ -664,6 +720,9 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         }
         $used = [];
         $index = 0;
+        $added = 0;
+        $noCountry = 0;
+        $unmatched = 0;
         foreach ($items as $k => $item) {
             if (!str_starts_with($item, '<li>')) {
                 continue;
@@ -685,20 +744,32 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
             }
             $index++;
             if ($author === null) {
+                $unmatched++;
                 continue;
             }
             $used[$author] = true;
             $country = $authors[$author]['country'];
             if ($country === '') {
+                $noCountry++;
                 continue;
             }
+            $added++;
 
             $affStart = strpos($item, '<span class="affiliation">');
             if ($affStart !== false && ($affEnd = Html::elementEnd($item, $affStart, 'span')) !== null) {
                 $closing = $affEnd - strlen('</span>');
-                $items[$k] = substr($item, 0, $closing)
+                // Right after the last affiliation name, before its ROR icon:
+                // the template puts line breaks (rendered as spaces) between
+                // the name, the ROR link and the closing tag, which gave
+                // "Mashiro , Indonesia" and let the line wrap before the comma.
+                $inner = substr($item, $affStart, $closing - $affStart);
+                $lastName = strrpos($inner, '</span>');
+                $at = $lastName !== false && $lastName > strlen('<span class="affiliation">')
+                    ? $affStart + $lastName + strlen('</span>')
+                    : $affStart + strlen(rtrim($inner));
+                $items[$k] = substr($item, 0, $at)
                     . '<span class="msd-country">' . Html::e(__('common.commaListSeparator') ?: ', ') . Html::e($country) . '</span>'
-                    . substr($item, $closing);
+                    . substr($item, $at);
             } elseif (preg_match('~<span class="name">.*?</span>~s', $item, $m, PREG_OFFSET_CAPTURE)) {
                 $pos = $m[0][1] + strlen($m[0][0]);
                 $items[$k] = substr($item, 0, $pos)
@@ -706,6 +777,14 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
                     . substr($item, $pos);
             }
         }
+
+        $this->report('author countries', sprintf(
+            'added to %d of %d authors (%d without Country, %d not matched by name)',
+            $added,
+            count($authors),
+            $noCountry,
+            $unmatched
+        ));
 
         return substr($html, 0, $ulStart) . implode('', $items) . substr($html, $ulEnd);
     }
@@ -721,18 +800,22 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
     protected function filterDimensions(string $html): string
     {
         $doi = $this->page['doi'] ?? null;
-        if (!$doi || !str_contains($html, '<section class="item doi">')) {
+        if (!$doi) {
+            $this->report('Dimensions badge', 'skipped: the article has no DOI');
             return $html;
         }
-        $badge = '<section class="item msd-dimensions">'
+        if (!str_contains($html, '<section class="item doi">')) {
+            $this->report('Dimensions badge', 'skipped: DOI section not found');
+            return $html;
+        }
+        // js/manuscriptDaffa.js loads badge.dimensions.ai only when the badge
+        // comes near the screen, so the third-party script does not slow
+        // down the first view of the article page.
+        $badge = '<section class="item msd-dimensions" data-msd-dimensions="' . Html::e(self::DIMENSIONS_SCRIPT) . '">'
             . '<span class="__dimensions_badge_embed__" data-doi="' . Html::e($doi) . '" data-style="small_rectangle" data-hide-zero-citations="false"></span>'
             . '</section>';
-        $html = Html::insertBefore($html, '<section class="item doi">', $badge);
-        return Html::insertBefore(
-            $html,
-            '</body>',
-            '<script async src="https://badge.dimensions.ai/badge.js" charset="utf-8"></script>' . "\n"
-        );
+        $this->report('Dimensions badge', 'added for DOI ' . $doi . ' (script loads when the badge scrolls into view)');
+        return Html::insertBefore($html, '<section class="item doi">', $badge);
     }
 
     /**
@@ -742,14 +825,17 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
     {
         $stats = $this->page['coverage'] ?? null;
         if (!$stats || !$stats['articles']) {
+            $this->report('issue coverage', 'skipped: no published articles (or the issue is not published)');
             return $html;
         }
         $tocStart = strpos($html, '<div class="obj_issue_toc">');
         if ($tocStart === false) {
+            $this->report('issue coverage', 'skipped: issue table of contents not found');
             return $html;
         }
         $headingStart = strpos($html, '<div class="heading">', $tocStart);
         if ($headingStart === false) {
+            $this->report('issue coverage', 'skipped: issue heading not found');
             return $html;
         }
         $insertAt = $headingStart + strlen('<div class="heading">');
@@ -760,6 +846,13 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
                 $insertAt = $coverEnd;
             }
         }
+        $this->report('issue coverage', sprintf(
+            'added (%d articles, %s pages, %d authors, %d countries)',
+            $stats['articles'],
+            $stats['pages'] ?? '-',
+            $stats['authors'],
+            count($stats['countries'])
+        ));
         return substr($html, 0, $insertAt) . $this->coverageBox($stats) . substr($html, $insertAt);
     }
 
@@ -813,11 +906,13 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
     {
         $hidden = $this->page['hiddenArticles'] ?? [];
         if (!$hidden) {
+            $this->report('homepage fold', 'skipped: ' . self::HOME_ARTICLE_LIMIT . ' articles or fewer');
             return $html;
         }
         $start = strpos($html, '<div class="sections">');
         $endMarker = '</div><!-- .sections -->';
         if ($start === false || ($end = strpos($html, $endMarker, $start)) === false) {
+            $this->report('homepage fold', 'skipped: article sections not found');
             return $html;
         }
         $sections = substr($html, $start, $end - $start);
@@ -847,6 +942,7 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
             . ' data-label-less="' . Html::e(__('plugins.themes.manuscriptDaffa.home.showLess')) . '"'
             . ' aria-expanded="false">' . Html::e(__('plugins.themes.manuscriptDaffa.home.readMore')) . '</a></div>';
 
+        $this->report('homepage fold', count($hidden) . ' articles behind "Read more"');
         return substr($html, 0, $start) . $sections . $endMarker . $button . substr($html, $end + strlen($endMarker));
     }
 
@@ -857,6 +953,7 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
     {
         $cards = $this->page['categories'] ?? [];
         if (!$cards) {
+            $this->report('category cards', 'skipped: no category with articles in the current issue');
             return $html;
         }
 
@@ -881,6 +978,7 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
 
         $pageStart = strpos($html, '<div class="page_index_journal">');
         if ($pageStart === false) {
+            $this->report('category cards', 'skipped: homepage content not found');
             return $html;
         }
 
@@ -894,8 +992,10 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
             }
         }
         if ($next === null) {
+            $this->report('category cards', 'skipped: no place to insert them');
             return $html;
         }
+        $this->report('category cards', count($cards) . ' cards added');
 
         $aboutStart = strpos($html, '<section class="homepage_about">', $pageStart);
         if ($aboutStart !== false && $aboutStart < $next) {
@@ -917,6 +1017,7 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         $parts = explode('<div class="obj_issue_summary">', $html);
         $count = count($parts) - 1;
         if ($count < 1) {
+            $this->report('archive cards', 'skipped: no issues on the page');
             return $html;
         }
 
@@ -931,7 +1032,14 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
 
         $stats = $this->page['archive'] ?? null;
         $hasOtherCards = stripos($html, 'author-origins') !== false || stripos($html, 'authorOrigins') !== false;
-        if ($stats && count($stats) === $count && !$hasOtherCards) {
+        if ($hasOtherCards) {
+            $this->report('archive cards', 'skipped: cards of the Author Origins plugin are on the page');
+        } elseif (!$stats) {
+            $this->report('archive cards', 'skipped: no statistics (see the lines above)');
+        } elseif (count($stats) !== $count) {
+            $this->report('archive cards', sprintf('skipped: %d issue blocks on the page but %d issues (template changed?)', $count, count($stats)));
+        } else {
+            $added = 0;
             for ($i = 1; $i <= $count; $i++) {
                 $pos = strpos($parts[$i], '</h2>');
                 if ($pos === false) {
@@ -939,7 +1047,9 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
                 }
                 $pos += strlen('</h2>');
                 $parts[$i] = substr($parts[$i], 0, $pos) . $this->archiveCard($stats[$i - 1]) . substr($parts[$i], $pos);
+                $added++;
             }
+            $this->report('archive cards', sprintf('added to %d of %d issues', $added, $count));
         }
 
         return implode('<div class="obj_issue_summary">', $parts);
@@ -996,14 +1106,19 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
     protected function filterArticleList(string $html): string
     {
         $parts = explode('<div class="obj_article_summary">', $html);
+        $rows = 0;
+        $pdfMoved = 0;
+        $failed = [];
         for ($i = 1; $i < count($parts); $i++) {
             $chunk = $parts[$i];
             if (!preg_match('~\bid="article-(\d+)"~', $chunk, $m)) {
                 continue;
             }
             $id = (int) $m[1];
-            $data = $this->listData($id);
+            // One article with bad data must not cost the others their row
+            $data = $this->guard('article action row ' . $id, fn () => $this->listData($id));
             if (!$data) {
+                $failed[] = $id;
                 continue;
             }
 
@@ -1014,6 +1129,7 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
                 $pdfUrl = html_entity_decode($g[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
                 $chunk = preg_replace($galleyPattern, '', $chunk, 1);
                 $chunk = preg_replace('~<ul class="galleys_links">\s*</ul>~', '', $chunk, 1);
+                $pdfMoved++;
             }
             $pdfUrl = $pdfUrl ?: $data['pdf'];
 
@@ -1029,10 +1145,19 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
                 $at = $h[0][1] + strlen($h[0][0]);
             }
             if ($at === null) {
+                $failed[] = $id;
                 continue;
             }
             $parts[$i] = substr($chunk, 0, $at) . $row . substr($chunk, $at);
+            $rows++;
         }
+        $this->report('article action rows', sprintf(
+            'added to %d of %d articles, PDF button moved for %d%s',
+            $rows,
+            count($parts) - 1,
+            $pdfMoved,
+            $failed ? ' (not added: article ' . implode(', ', $failed) . ')' : ''
+        ));
         return implode('<div class="obj_article_summary">', $parts);
     }
 
@@ -1120,9 +1245,15 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         $skip = fn (string $tag) => (bool) preg_match(self::COUNTER_PATTERN, $tag);
         $lazy = fn (string $region) => Html::addAttribute($region, ['img', 'iframe'], 'loading', 'lazy', $skip);
 
+        $before = substr_count($html, ' loading="lazy"');
         $html = Html::region($html, '<div class="pkp_structure_sidebar', '</div><!-- pkp_sidebar.left -->', $lazy);
         $html = Html::region($html, '<div class="pkp_structure_footer_wrapper"', '</div><!-- pkp_structure_footer_wrapper -->', $lazy);
 
+        $this->report('image loading', sprintf(
+            'header logo %s, %d sidebar/footer images lazy-loaded',
+            str_contains($html, 'fetchpriority="high"') ? 'loaded first' : 'not found',
+            substr_count($html, ' loading="lazy"') - $before
+        ));
         return $html;
     }
 
@@ -1137,12 +1268,15 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         }
         $head = substr($html, 0, $headEnd);
         if (preg_match('~<meta\s[^>]*name\s*=\s*["\']description["\']~i', $head)) {
+            $this->report('meta description', 'kept the existing one');
             return $html;
         }
         $description = Html::excerpt($this->page['description'] ?? '');
         if ($description === '') {
+            $this->report('meta description', 'skipped: no text');
             return $html;
         }
+        $this->report('meta description', 'added (' . mb_strlen($description, 'UTF-8') . ' characters)');
         return substr($html, 0, $headEnd) . '<meta name="description" content="' . Html::e($description) . '">' . "\n" . substr($html, $headEnd);
     }
 
@@ -1162,7 +1296,13 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         if (!$isManager) {
             return $html;
         }
-        $lines = $this->page['diagnostics'] ?? [];
+        $lines = ['page: ' . ($this->page['template'] ?? '?')];
+        foreach ($this->page['features'] ?? [] as $feature => $status) {
+            $lines[] = $feature . ': ' . $status;
+        }
+        foreach ($this->page['diagnostics'] ?? [] as $line) {
+            $lines[] = $line;
+        }
         $lines[] = 'home country: ' . ($this->getHomeCountry() ?: 'not set');
         $comment = "\n<!-- manuscriptDaffa " . $this->getVersionString() . "\n  " . implode("\n  ", array_map(
             fn ($l) => str_replace('--', '- -', $l),

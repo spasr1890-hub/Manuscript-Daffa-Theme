@@ -5,7 +5,9 @@
  *
  * Front end behaviour of the Manuscript-Daffa theme:
  * - "Show Abstract" opens and closes the abstract in an article list;
- * - "Read more" / "Show less" unfolds the current issue on the homepage.
+ * - "Read more" / "Show less" unfolds the current issue on the homepage;
+ * - the Dimensions citation badge script loads only when the badge comes
+ *   near the screen.
  * Without JavaScript both links open the article or the issue page.
  */
 (function () {
@@ -61,4 +63,53 @@
 			link.scrollIntoView({block: 'center'});
 		}
 	});
+
+	// Dimensions badge: load the third-party script when the badge is about
+	// to be seen (or right away in browsers without IntersectionObserver).
+	function loadDimensions(src) {
+		if (document.querySelector('script[data-msd-dimensions]')) {
+			return;
+		}
+		var script = document.createElement('script');
+		script.src = src;
+		script.async = true;
+		script.charset = 'utf-8';
+		script.setAttribute('data-msd-dimensions', '');
+		script.onload = function () {
+			// The script scans the page when it starts; scan again in case
+			// it started before the page was complete.
+			if (window.__dimensions_embed && typeof window.__dimensions_embed.addBadges === 'function') {
+				window.__dimensions_embed.addBadges();
+			}
+		};
+		document.body.appendChild(script);
+	}
+
+	function initDimensions() {
+		var badge = document.querySelector('[data-msd-dimensions]');
+		if (!badge) {
+			return;
+		}
+		var src = badge.getAttribute('data-msd-dimensions');
+		if (!('IntersectionObserver' in window)) {
+			loadDimensions(src);
+			return;
+		}
+		var observer = new IntersectionObserver(function (entries) {
+			for (var i = 0; i < entries.length; i++) {
+				if (entries[i].isIntersecting) {
+					observer.disconnect();
+					loadDimensions(src);
+					return;
+				}
+			}
+		}, {rootMargin: '300px 0px'});
+		observer.observe(badge);
+	}
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', initDimensions);
+	} else {
+		initDimensions();
+	}
 })();
