@@ -100,3 +100,24 @@ msgstr "Batal Pilih"
 
 msgid "plugins.themes.manuscriptDaffa.admin.largeFile"
 msgstr "File besar (5 MB atau lebih), sering karena font tertanam di dokumen Word"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.label"
+msgstr "Tinggi logo header"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.description"
+msgstr "Tinggi logo di header pada layar desktop (lebar 992 px ke atas). Unggah logo sekitar dua kali ukuran yang dipilih agar tetap tajam; \"Selebar header\" paling cocok untuk banner lebar (sekitar 2200 px). Layar kecil selalu memakai header ringkas."
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.80"
+msgstr "80 px (bawaan)"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.100"
+msgstr "100 px"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.120"
+msgstr "120 px"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.150"
+msgstr "150 px"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.full"
+msgstr "Selebar header (banner)"

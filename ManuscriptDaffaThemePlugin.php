@@ -46,6 +46,9 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
     /** Files from this size (bytes) are marked in the back end file lists */
     public const LARGE_FILE_BYTES = 5 * 1024 * 1024;
 
+    /** Choices of the header logo height option (desktop) */
+    public const HEADER_LOGO_HEIGHTS = ['80', '100', '120', '150', 'full'];
+
     /** Request parameter of the back end file size lookup */
     public const FILE_SIZE_PARAM = 'manuscriptDaffaFileSizes';
 
@@ -88,6 +91,18 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         // Home country of the journal (foreign author percentage)
         $this->addHomeCountryOption();
 
+        // Height of the header logo on desktop screens
+        $this->addOption('headerLogoHeight', 'FieldOptions', [
+            'type' => 'radio',
+            'label' => __('plugins.themes.manuscriptDaffa.option.headerLogoHeight.label'),
+            'description' => __('plugins.themes.manuscriptDaffa.option.headerLogoHeight.description'),
+            'options' => array_map(fn ($value) => [
+                'value' => $value,
+                'label' => __('plugins.themes.manuscriptDaffa.option.headerLogoHeight.' . $value),
+            ], self::HEADER_LOGO_HEIGHTS),
+            'default' => '80',
+        ]);
+
         // Dequeue any fonts loaded by parent theme
         if (method_exists($this, 'removeStyle')) {
             for ($i = 0; $i < 11; $i++) {
@@ -119,7 +134,8 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         $this->addStyle(
             'manuscriptDaffaColours',
             ':root{--msd-primary:' . $baseColour . ';--msd-accent:' . $accentColour
-                . ';--msd-on-primary:' . ($this->isColourDark($baseColour) ? '#fff' : 'rgba(0,0,0,.84)') . ';}',
+                . ';--msd-on-primary:' . ($this->isColourDark($baseColour) ? '#fff' : 'rgba(0,0,0,.84)') . ';}'
+                . $this->headerLogoCss(),
             ['inline' => true]
         );
 
@@ -142,6 +158,9 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         // pkp/pkp-lib#11974
         if (in_array($name, ['baseColour', 'accentColour']) && !preg_match('/^#[0-9a-fA-F]{1,6}$/', (string) $value)) {
             $value = null;
+        }
+        if ($name === 'headerLogoHeight' && !in_array((string) $value, self::HEADER_LOGO_HEIGHTS, true)) {
+            $value = '80';
         }
         if ($name === 'homeCountry') {
             $value = strtoupper(trim((string) $value));
@@ -185,6 +204,31 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
     protected function safeColour($colour, string $default): string
     {
         return is_string($colour) && preg_match('/^#[0-9a-fA-F]{1,6}$/', $colour) ? $colour : $default;
+    }
+
+    /**
+     * CSS for the header logo height option. Desktop only (992 px and up);
+     * small screens keep the compact header of the Default Theme.
+     *
+     * - 80 (default): the Manuscript size, at most 80 px high and 75 % wide;
+     * - 100/120/150: a taller logo, still next to the user menu;
+     * - full: a banner across the whole header, below the user menu.
+     */
+    protected function headerLogoCss(): string
+    {
+        $height = (string) $this->getOption('headerLogoHeight');
+        if (!in_array($height, self::HEADER_LOGO_HEIGHTS, true) || $height === '80') {
+            return '';
+        }
+        if ($height === 'full') {
+            return '@media (min-width:992px){'
+                . '.has_site_logo .pkp_head_wrapper{padding-top:3.2rem}'
+                . '.pkp_site_name{width:100%}'
+                . '.pkp_site_name .is_img{display:block}'
+                . '.pkp_site_name .is_img img{max-height:none;width:100%;height:auto}'
+                . '}';
+        }
+        return '@media (min-width:992px){.pkp_site_name .is_img img{max-height:' . (int) $height . 'px}}';
     }
 
     /**
