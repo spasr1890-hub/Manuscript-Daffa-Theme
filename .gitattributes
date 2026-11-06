@@ -1,0 +1,4 @@
+# Development files stay out of the plugin archive (git archive / releases)
+/tests export-ignore
+/.github export-ignore
+/.gitattributes export-ignore

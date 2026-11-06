@@ -1,0 +1,84 @@
+# Checks for every push and pull request:
+# - PHP syntax and the theme tests on the PHP versions OJS 3.5 supports
+# - the output filter name clash with the Smarty version of OJS 3.5
+# - the OJS 3.5 templates still contain the markup the theme looks for,
+#   and the theme's LESS compiles together with the Default Theme
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Tests (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2', '8.3', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: intl, mbstring, simplexml
+          coverage: none
+      - name: PHP syntax
+        run: find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l
+      - name: JavaScript syntax
+        run: for f in js/*.js; do node --check "$f"; done
+      - name: Theme tests
+        run: php tests/run.php
+
+  smarty:
+    name: Smarty output filter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - name: Smarty 4.5.5 (the version of OJS 3.5)
+        run: git clone --quiet --depth 1 --branch v4.5.5 https://github.com/smarty-php/smarty.git "$RUNNER_TEMP/smarty"
+      - run: php tests/smarty-filter.php "$RUNNER_TEMP/smarty/libs"
+
+  ojs:
+    name: OJS ${{ matrix.ojs }} templates and styles
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The release in use and the 3.5 maintenance branch (next releases)
+        ojs: ['3_5_0-6', 'stable-3_5_0']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: theme
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: OJS ${{ matrix.ojs }} with lib/pkp
+        run: |
+          git clone --quiet --depth 1 --branch "${{ matrix.ojs }}" https://github.com/pkp/ojs.git ojs
+          git -C ojs submodule update --quiet --init --depth 1 lib/pkp
+      - name: Template markers
+        run: php theme/tests/check-templates.php ojs
+      - name: LESS compiles with the Default Theme
+        run: |
+          mkdir -p ojs/plugins/themes/manuscriptDaffa
+          cp -r theme/styles theme/fonts ojs/plugins/themes/manuscriptDaffa/
+          cd ojs/plugins/themes/manuscriptDaffa/styles
+          printf '@import "../../default/styles/index.less";\n@import "index.less";\n' > ci-build.less
+          npx --yes less@4.2.0 --global-var="baseUrl=''" ci-build.less > "$RUNNER_TEMP/theme.css"
+          grep -q 'font-display: swap' "$RUNNER_TEMP/theme.css"
+          echo "Compiled $(wc -c < "$RUNNER_TEMP/theme.css") bytes of CSS"

@@ -80,6 +80,15 @@ Tema ini tidak bentrok dengan plugin Manuscript bawaan (`defaultManuscript`); ke
 - Tema mengenali markup template Default Theme OJS 3.5. Jika ada plugin lain yang mengganti template yang sama (mis. `article_summary.tpl`), bagian yang tidak dikenali dibiarkan apa adanya.
 - Belum diuji pada instalasi OJS 3.5 yang berjalan; perubahan HTML sudah diuji terhadap markup template Default Theme 3.5. Laporkan jika ada bagian yang tidak muncul, sertakan komentar diagnosis `<!-- manuscriptDaffa ... -->`.
 
+## Pengembangan dan rilis
+
+- **Rilis otomatis.** Setiap kali `main` memuat versi baru di `version.xml` (mis. `1.0.2.0`) yang belum punya rilis, GitHub Actions (`.github/workflows/release.yml`) menjalankan uji, membuat `manuscriptDaffa-<versi>.tar.gz` (folder `manuscriptDaffa/`, tanpa berkas uji), dan menerbitkannya di halaman **Releases** repositori. Untuk memperbarui jurnal: unduh berkas itu dari *Releases*, lalu *Website → Plugins → Upgrade* di baris Manuscript-Daffa (atau *Upload A New Plugin* untuk pemasangan pertama). Jadi cukup naikkan nomor di `version.xml` pada setiap perubahan tema.
+- **Uji otomatis** (`.github/workflows/ci.yml`) di setiap push dan pull request:
+  - sintaks PHP dan JavaScript, serta `php tests/run.php` (filter HTML dan fungsi bantu terhadap markup template Default Theme 3.5) di PHP 8.2, 8.3, dan 8.4;
+  - `tests/smarty-filter.php` dengan Smarty 4.5.5 (versi OJS 3.5): memastikan nama *output filter* tema tidak bentrok dengan filter plugin lain;
+  - `tests/check-templates.php` terhadap OJS `3_5_0-6` dan cabang `stable-3_5_0`: memastikan template OJS masih memuat markup yang dicari tema, sehingga perubahan template di rilis OJS berikutnya ketahuan sebelum tema dipasang; serta kompilasi LESS tema bersama Default Theme.
+- **Menjalankan uji sendiri:** `php tests/run.php`; `php tests/check-templates.php /path/ke/ojs`; `php tests/smarty-filter.php /path/ke/smarty/libs`.
+
 ## Lisensi
 
 GNU GPL v3, lihat `LICENSE`. Berbasis Manuscript (Default child theme) karya Public Knowledge Project (Nate Wright, Stefan Weil).
