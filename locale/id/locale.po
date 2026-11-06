@@ -181,3 +181,6 @@ msgstr "Admin: tombol \"Pilih Semua / Batal Pilih\""
 
 msgid "plugins.themes.manuscriptDaffa.option.features.adminFileSizes"
 msgstr "Admin: ukuran file di daftar file workflow dan reviewer"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.openGraph"
+msgstr "Pratinjau tautan untuk WhatsApp, Facebook, dll. (tag Open Graph)"
