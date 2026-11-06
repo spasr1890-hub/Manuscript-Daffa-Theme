@@ -1,0 +1,82 @@
+# Publishes a GitHub release with the installable plugin archive whenever the
+# version in version.xml on main has no release yet:
+#   manuscriptDaffa-<version>.tar.gz  (folder manuscriptDaffa/, without tests)
+# Upload it in OJS: Website > Plugins > Upload A New Plugin (or Upgrade).
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: intl, mbstring, simplexml
+          coverage: none
+      - name: Version from version.xml
+        id: version
+        run: |
+          release=$(php -r 'echo (string) simplexml_load_file("version.xml")->release;')
+          if ! [[ "$release" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "version.xml release '$release' is not four numbers" >&2
+            exit 1
+          fi
+          echo "release=$release" >> "$GITHUB_OUTPUT"
+          echo "tag=v$release" >> "$GITHUB_OUTPUT"
+      - name: Already released?
+        id: exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "${{ steps.version.outputs.tag }}" > /dev/null 2>&1; then
+            echo "Release ${{ steps.version.outputs.tag }} exists; nothing to do."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Tests
+        if: steps.exists.outputs.exists == 'false'
+        run: |
+          find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l > /dev/null
+          php tests/run.php
+      - name: Build the plugin archive
+        if: steps.exists.outputs.exists == 'false'
+        run: |
+          file="manuscriptDaffa-${{ steps.version.outputs.release }}.tar.gz"
+          git archive --format=tar.gz --prefix=manuscriptDaffa/ -o "$file" HEAD
+          tar -tzf "$file" | grep -q '^manuscriptDaffa/version.xml$'
+          if tar -tzf "$file" | grep -qE '^manuscriptDaffa/(tests|\.github)/'; then
+            echo "Development files in the archive" >&2
+            exit 1
+          fi
+          echo "FILE=$file" >> "$GITHUB_ENV"
+      - name: Publish the release
+        if: steps.exists.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "Manuscript-Daffa ${{ steps.version.outputs.release }} for OJS 3.5."
+            echo
+            echo "**Install or update:** download \`$FILE\` below, then in OJS go to"
+            echo "*Website → Plugins*: *Upload A New Plugin* for a first install, or"
+            echo "*Upgrade* in the Manuscript-Daffa row to update."
+          } > notes.md
+          gh release create "${{ steps.version.outputs.tag }}" "$FILE" \
+            --target "$GITHUB_SHA" \
+            --title "Manuscript-Daffa ${{ steps.version.outputs.release }}" \
+            --notes-file notes.md \
+            --generate-notes
