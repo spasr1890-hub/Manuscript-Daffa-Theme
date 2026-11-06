@@ -758,9 +758,18 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
             $affStart = strpos($item, '<span class="affiliation">');
             if ($affStart !== false && ($affEnd = Html::elementEnd($item, $affStart, 'span')) !== null) {
                 $closing = $affEnd - strlen('</span>');
-                $items[$k] = substr($item, 0, $closing)
+                // Right after the last affiliation name, before its ROR icon:
+                // the template puts line breaks (rendered as spaces) between
+                // the name, the ROR link and the closing tag, which gave
+                // "Mashiro , Indonesia" and let the line wrap before the comma.
+                $inner = substr($item, $affStart, $closing - $affStart);
+                $lastName = strrpos($inner, '</span>');
+                $at = $lastName !== false && $lastName > strlen('<span class="affiliation">')
+                    ? $affStart + $lastName + strlen('</span>')
+                    : $affStart + strlen(rtrim($inner));
+                $items[$k] = substr($item, 0, $at)
                     . '<span class="msd-country">' . Html::e(__('common.commaListSeparator') ?: ', ') . Html::e($country) . '</span>'
-                    . substr($item, $closing);
+                    . substr($item, $at);
             } elseif (preg_match('~<span class="name">.*?</span>~s', $item, $m, PREG_OFFSET_CAPTURE)) {
                 $pos = $m[0][1] + strlen($m[0][0]);
                 $items[$k] = substr($item, 0, $pos)
