@@ -181,3 +181,6 @@ msgstr "Back end: \"Select all / Clear selection\" buttons"
 
 msgid "plugins.themes.manuscriptDaffa.option.features.adminFileSizes"
 msgstr "Back end: file sizes in the workflow and reviewer file lists"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.openGraph"
+msgstr "Link previews for WhatsApp, Facebook and others (Open Graph tags)"

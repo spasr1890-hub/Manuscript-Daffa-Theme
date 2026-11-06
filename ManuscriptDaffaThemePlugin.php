@@ -26,6 +26,7 @@ use APP\plugins\themes\manuscriptDaffa\classes\IssueStats;
 use APP\submission\Submission;
 use APP\template\TemplateManager;
 use PKP\core\PKPString;
+use PKP\file\PublicFileManager;
 use PKP\plugins\Hook;
 use PKP\plugins\PluginRegistry;
 use PKP\plugins\ThemePlugin;
@@ -61,6 +62,7 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         'archiveCards',
         'actionRows',
         'metaDescription',
+        'openGraph',
         'imageLoading',
         'adminSelectAll',
         'adminFileSizes',
@@ -489,6 +491,9 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
                 $this->guard('prepare archive cards', fn () => $this->prepareArchive($templateMgr));
                 break;
         }
+        if ($this->featureEnabled('openGraph')) {
+            $this->guard('prepare Open Graph', fn () => $this->prepareOpenGraph($templateMgr, $template));
+        }
         $this->guard('prepare meta description', function () use ($context) {
             if ($this->page['description'] === null && $context) {
                 $this->page['description'] = trim($context->getLocalizedName() . '. ' . Html::excerpt($context->getLocalizedData('description'), 400), ' .');
@@ -761,6 +766,7 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         }
         $steps[] = ['image loading', 'imageLoading', $this->filterImages(...)];
         $steps[] = ['meta description', 'metaDescription', $this->filterMetaDescription(...)];
+        $steps[] = ['Open Graph', 'openGraph', $this->filterOpenGraph(...)];
 
         foreach ($steps as [$name, $feature, $step]) {
             if ($feature !== null && !$this->featureEnabled($feature)) {
@@ -1403,6 +1409,127 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         }
         $this->report('meta description', 'added (' . mb_strlen($description, 'UTF-8') . ' characters)');
         return substr($html, 0, $headEnd) . '<meta name="description" content="' . Html::e($description) . '">' . "\n" . substr($html, $headEnd);
+    }
+
+    /**
+     * Data for the Open Graph tags (link previews in WhatsApp, Facebook,
+     * Telegram, X and others): title, type, canonical URL and an image
+     * (article cover, issue cover, journal thumbnail or header logo).
+     */
+    protected function prepareOpenGraph(TemplateManager $templateMgr, string $template): void
+    {
+        $context = $this->page['context'];
+        if (!$context) {
+            return;
+        }
+        $og = ['type' => 'website', 'title' => null, 'url' => null, 'image' => null, 'imageAlt' => null, 'published' => null];
+
+        switch ($template) {
+            case 'frontend/pages/article.tpl':
+                $publication = $templateMgr->getTemplateVars('publication');
+                $article = $templateMgr->getTemplateVars('article');
+                if ($publication) {
+                    $og['type'] = 'article';
+                    $og['title'] = $this->plainText($publication->getLocalizedFullTitle());
+                    $og['image'] = $publication->getLocalizedCoverImageUrl((int) $context->getId()) ?: null;
+                    $cover = $publication->getLocalizedData('coverImage');
+                    $og['imageAlt'] = is_array($cover) ? ($cover['altText'] ?? null) : null;
+                    $og['published'] = $publication->getData('datePublished') ?: null;
+                }
+                if ($article) {
+                    $og['url'] = $this->articleUrl($article);
+                }
+                if (!$og['image'] && ($issue = $templateMgr->getTemplateVars('issue'))) {
+                    $og['image'] = $issue->getLocalizedCoverImageUrl() ?: null;
+                }
+                break;
+            case 'frontend/pages/issue.tpl':
+                if ($issue = $templateMgr->getTemplateVars('issue')) {
+                    $og['title'] = $this->plainText($issue->getIssueIdentification()) . ' | ' . $context->getLocalizedName();
+                    $og['url'] = $this->url('issue', 'view', [$issue->getBestIssueId()]);
+                    $og['image'] = $issue->getLocalizedCoverImageUrl() ?: null;
+                }
+                break;
+            case 'frontend/pages/indexJournal.tpl':
+                $og['title'] = $context->getLocalizedName();
+                $og['url'] = $this->url('index', 'index');
+                break;
+        }
+
+        // Fallback image: journal thumbnail, then the header logo
+        if (!$og['image']) {
+            foreach (['journalThumbnail', 'pageHeaderLogoImage'] as $setting) {
+                $file = $context->getLocalizedData($setting);
+                if (is_array($file) && !empty($file['uploadName'])) {
+                    $og['image'] = Application::get()->getRequest()->getBaseUrl() . '/'
+                        . (new PublicFileManager())->getContextFilesPath((int) $context->getId()) . '/'
+                        . rawurlencode($file['uploadName']);
+                    $og['imageAlt'] = $file['altText'] ?? null;
+                    break;
+                }
+            }
+        }
+        $this->page['og'] = $og;
+    }
+
+    /**
+     * Open Graph and Twitter card tags, unless the page has Open Graph tags
+     * from another plugin already.
+     */
+    protected function filterOpenGraph(string $html): string
+    {
+        $headEnd = stripos($html, '</head>');
+        if ($headEnd === false) {
+            $this->report('Open Graph', 'skipped: no <head>');
+            return $html;
+        }
+        $head = substr($html, 0, $headEnd);
+        if (preg_match('~<meta\s[^>]*property\s*=\s*["\']og:~i', $head)) {
+            $this->report('Open Graph', 'kept the existing tags (added by another plugin)');
+            return $html;
+        }
+
+        $request = Application::get()->getRequest();
+        $context = $this->page['context'] ?? null;
+        $og = $this->page['og'] ?? [];
+
+        $title = $og['title'] ?? null;
+        if (!$title && preg_match('~<title[^>]*>(.*?)</title>~is', $head, $m)) {
+            $title = $this->plainText($m[1]);
+        }
+        $description = Html::excerpt($this->page['description'] ?? '', 200);
+        $url = $og['url'] ?? $request->getRequestUrl();
+        $image = $og['image'] ?? null;
+
+        $tags = [
+            ['property', 'og:type', $og['type'] ?? 'website'],
+            ['property', 'og:site_name', $context ? $context->getLocalizedName() : null],
+            ['property', 'og:title', $title],
+            ['property', 'og:description', $description],
+            ['property', 'og:url', $url],
+            ['property', 'og:image', $image],
+            ['property', 'og:image:alt', $image ? ($og['imageAlt'] ?: $title) : null],
+            ['property', 'article:published_time', $og['published'] ?? null],
+            ['name', 'twitter:card', $image ? 'summary_large_image' : 'summary'],
+            ['name', 'twitter:title', $title],
+            ['name', 'twitter:description', $description],
+            ['name', 'twitter:image', $image],
+        ];
+        $out = '';
+        foreach ($tags as [$attr, $name, $value]) {
+            $value = trim((string) $value);
+            if ($value !== '') {
+                $out .= '<meta ' . $attr . '="' . $name . '" content="' . Html::e($value) . '">' . "\n";
+            }
+        }
+
+        $this->report('Open Graph', 'added (' . ($og['type'] ?? 'website') . ', ' . ($image ? 'image ' . basename(parse_url($image, PHP_URL_PATH) ?: $image) : 'no image') . ')');
+        return substr($html, 0, $headEnd) . $out . substr($html, $headEnd);
+    }
+
+    protected function plainText(?string $html): string
+    {
+        return trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags((string) $html), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
     }
 
     /**
