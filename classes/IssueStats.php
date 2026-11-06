@@ -16,16 +16,21 @@ namespace APP\plugins\themes\manuscriptDaffa\classes;
 use APP\facades\Repo;
 use APP\submission\Submission;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use PKP\facades\Locale;
 use Throwable;
 
 class IssueStats
 {
-    /** Cache lifetime (30 minutes) */
-    public const TTL = 1800;
+    /**
+     * Cache lifetime (one day). The cache key also holds a stamp of the
+     * issue's articles (see stamps()), so publishing, unpublishing or editing
+     * an article of the issue refreshes the statistics right away.
+     */
+    public const TTL = 86400;
 
     /** Bump to invalidate cached results after a change in the calculation */
-    public const CACHE_VERSION = 3;
+    public const CACHE_VERSION = 4;
 
     /**
      * Number of pages in a "Pages" value.
@@ -116,22 +121,68 @@ class IssueStats
      *
      * @return array{articles:int,pages:?int,authors:int,countries:array<string,int>,known:int,foreign:?int,foreignPct:?int,guessed:int}
      */
-    public static function get(int $contextId, int $issueId, ?string $homeCountry): array
+    public static function get(int $contextId, int $issueId, ?string $homeCountry, string $stamp = '', bool $refresh = false): array
     {
         $homeCountry = $homeCountry ? strtoupper($homeCountry) : '';
         $key = sprintf(
-            'manuscriptDaffa_issue_v%d_%d_%d_%s_%s',
+            'manuscriptDaffa_issue_v%d_%d_%d_%s_%s_%s',
             self::CACHE_VERSION,
             $contextId,
             $issueId,
             $homeCountry ?: '-',
-            Locale::getLocale()
+            Locale::getLocale(),
+            $stamp ?: '-'
         );
         try {
+            if ($refresh) {
+                $stats = self::compute($contextId, $issueId, $homeCountry);
+                Cache::put($key, $stats, self::TTL);
+                return $stats;
+            }
             return Cache::remember($key, self::TTL, fn () => self::compute($contextId, $issueId, $homeCountry));
         } catch (Throwable $e) {
             return self::compute($contextId, $issueId, $homeCountry);
         }
+    }
+
+    /**
+     * A short stamp per issue that changes when its published articles
+     * change: number of articles, latest modification of their current
+     * publications, number of authors and the newest author id, and the
+     * modification date of the issue. One grouped query for all issues.
+     *
+     * @param int[] $issueIds
+     *
+     * @return array<int,string> issue id => stamp ('' when it can not be read)
+     */
+    public static function stamps(int $contextId, array $issueIds): array
+    {
+        $issueIds = array_values(array_unique(array_map('intval', $issueIds)));
+        if (!$issueIds) {
+            return [];
+        }
+        $parts = array_fill_keys($issueIds, []);
+        try {
+            $rows = DB::table('publications as p')
+                ->join('submissions as s', 's.current_publication_id', '=', 'p.publication_id')
+                ->leftJoin('authors as a', 'a.publication_id', '=', 'p.publication_id')
+                ->where('s.context_id', $contextId)
+                ->where('s.status', Submission::STATUS_PUBLISHED)
+                ->whereIn('p.issue_id', $issueIds)
+                ->groupBy('p.issue_id')
+                ->selectRaw('p.issue_id, COUNT(DISTINCT p.publication_id) AS pubs, MAX(p.last_modified) AS modified, COUNT(a.author_id) AS authors, MAX(a.author_id) AS last_author')
+                ->get();
+            foreach ($rows as $row) {
+                $parts[(int) $row->issue_id] = [$row->pubs, $row->modified, $row->authors, $row->last_author];
+            }
+            $issues = DB::table('issues')->whereIn('issue_id', $issueIds)->pluck('last_modified', 'issue_id');
+            foreach ($issues as $issueId => $modified) {
+                $parts[(int) $issueId][] = $modified;
+            }
+        } catch (Throwable $e) {
+            return array_fill_keys($issueIds, '');
+        }
+        return array_map(fn ($p) => substr(md5(json_encode($p)), 0, 12), $parts);
     }
 
     /**

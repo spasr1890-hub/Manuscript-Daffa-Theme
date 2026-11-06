@@ -139,3 +139,45 @@ msgstr "Besar"
 
 msgid "plugins.themes.manuscriptDaffa.option.articleListSize.xlarge"
 msgstr "Sangat besar"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.label"
+msgstr "Fitur tema"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.description"
+msgstr "Matikan fitur yang tidak diinginkan. Fitur yang dimatikan tidak mengubah halaman dan tidak menjalankan kueri database. Fitur yang ditambahkan di versi berikutnya otomatis menyala."
+
+msgid "plugins.themes.manuscriptDaffa.option.features.authorCountry"
+msgstr "Negara di belakang afiliasi penulis (halaman artikel)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.dimensions"
+msgstr "Badge kutipan Dimensions di atas DOI (halaman artikel)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.coverage"
+msgstr "Kotak Cakupan Terbitan (halaman terbitan dan beranda)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.sortByPages"
+msgstr "Urutkan artikel menurut halaman awal (halaman terbitan dan beranda)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.homeFold"
+msgstr "Lipat terbitan terkini di beranda setelah 5 artikel (\"Selengkapnya\")"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.categories"
+msgstr "Kartu kategori di beranda"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.archiveCards"
+msgstr "Kartu statistik di halaman Arsip"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.actionRows"
+msgstr "Tombol aksi di daftar artikel (Abstrak, Unduh PDF, DOI, Google Scholar)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.metaDescription"
+msgstr "Deskripsi meta otomatis untuk mesin pencari"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.imageLoading"
+msgstr "Pengaturan pemuatan gambar (logo header lebih dulu, sidebar, footer dan sampul arsip ditunda)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.adminSelectAll"
+msgstr "Admin: tombol \"Pilih Semua / Batal Pilih\""
+
+msgid "plugins.themes.manuscriptDaffa.option.features.adminFileSizes"
+msgstr "Admin: ukuran file di daftar file workflow dan reviewer"
