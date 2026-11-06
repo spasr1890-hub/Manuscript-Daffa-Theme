@@ -63,6 +63,11 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
      */
     public function init()
     {
+        // Register first, so a failure further down can not leave the page
+        // unprocessed, and early, so the output filter is in place even when
+        // a later plugin renders the page itself.
+        Hook::add('TemplateManager::display', $this->handleDisplay(...), Hook::SEQUENCE_CORE);
+
         // Initialize the parent theme
         $this->setParent('defaultthemeplugin');
 
@@ -122,9 +127,11 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         $this->addScript('manuscriptDaffa', 'js/manuscriptDaffa.js');
 
         // Back end helpers, only for logged-in users
-        $this->addAdminScript();
-
-        Hook::add('TemplateManager::display', $this->handleDisplay(...));
+        try {
+            $this->addAdminScript();
+        } catch (Throwable $e) {
+            error_log('manuscriptDaffa admin script: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -310,7 +317,11 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
             error_log('manuscriptDaffa: ' . $e->getMessage());
         }
 
-        $templateMgr->registerFilter('output', $this->filterOutput(...));
+        // Smarty stores output filters by name and gives every closure the
+        // same name ("closure"), so an unnamed filter would replace, or be
+        // replaced by, another plugin's (e.g. Publication Facts Label on the
+        // article page). Register under our own name.
+        $templateMgr->registerFilter('output', $this->filterOutput(...), 'manuscriptDaffa');
 
         return Hook::CONTINUE;
     }
@@ -500,7 +511,16 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
      */
     public function filterOutput(string $html, $smartyTemplate = null): string
     {
-        if (!str_contains($html, '</body>') || !str_contains($html, '<html')) {
+        // Output filters also run for every fragment rendered with fetch()
+        // while the page is displayed (sidebar blocks, for example). Only the
+        // displayed page template is changed, even when a block contains a
+        // complete HTML document of its own.
+        $template = $this->page['template'] ?? '';
+        $resource = is_object($smartyTemplate) ? (string) ($smartyTemplate->template_resource ?? '') : '';
+        if ($template === '' || ($resource !== '' && !str_ends_with($resource, $template))) {
+            return $html;
+        }
+        if (!str_contains($html, '</body>')) {
             return $html;
         }
         if (!empty($this->page['done'])) {
@@ -551,10 +571,11 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         if ($start === false) {
             return $html;
         }
-        $ulStart = strpos($html, '<ul class="authors">', $start);
-        if ($ulStart === false) {
+        // Other plugins may add attributes (PFL: <ul id="author-list" class="authors">)
+        if (!preg_match('~<ul\b[^>]*\bclass="authors"[^>]*>~', $html, $um, PREG_OFFSET_CAPTURE, $start)) {
             return $html;
         }
+        $ulStart = $um[0][1];
         $ulEnd = Html::elementEnd($html, $ulStart, 'ul');
         if ($ulEnd === null) {
             return $html;
@@ -1059,7 +1080,12 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         $request = Application::get()->getRequest();
         $user = $request->getUser();
         $context = $this->page['context'] ?? null;
-        if (!$user || !$context || !$user->hasRole([Role::ROLE_ID_MANAGER, Role::ROLE_ID_SITE_ADMIN], (int) $context->getId())) {
+        if (!$user || !$context) {
+            return $html;
+        }
+        $isManager = $user->hasRole([Role::ROLE_ID_MANAGER, Role::ROLE_ID_SITE_ADMIN], (int) $context->getId())
+            || $user->hasRole([Role::ROLE_ID_SITE_ADMIN], Application::SITE_CONTEXT_ID);
+        if (!$isManager) {
             return $html;
         }
         $lines = $this->page['diagnostics'] ?? [];
