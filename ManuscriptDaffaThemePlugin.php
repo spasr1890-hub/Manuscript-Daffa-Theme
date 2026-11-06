@@ -130,7 +130,7 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         $this->modifyStyle('stylesheet', ['addLessVariables' => join('', $additionalLessVariables)]);
 
         // Feature styles follow the colours chosen in OJS
-        $this->addStyle('manuscriptDaffa', 'styles/manuscriptDaffa.css');
+        $this->addStyle('manuscriptDaffa', $this->versioned('styles/manuscriptDaffa.css'));
         $this->addStyle(
             'manuscriptDaffaColours',
             ':root{--msd-primary:' . $baseColour . ';--msd-accent:' . $accentColour
@@ -140,7 +140,7 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         );
 
         // Front end behaviour (abstract toggle, "Read more")
-        $this->addScript('manuscriptDaffa', 'js/manuscriptDaffa.js');
+        $this->addScript('manuscriptDaffa', $this->versioned('js/manuscriptDaffa.js'));
 
         // Back end helpers, only for logged-in users
         try {
@@ -300,7 +300,7 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
             'window.manuscriptDaffaAdmin = ' . json_encode($config, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP) . ';',
             ['inline' => true, 'contexts' => 'backend']
         );
-        $this->addScript('manuscriptDaffaAdmin', 'js/manuscriptDaffaAdmin.js', ['contexts' => 'backend']);
+        $this->addScript('manuscriptDaffaAdmin', $this->versioned('js/manuscriptDaffaAdmin.js'), ['contexts' => 'backend']);
     }
 
     /*
@@ -1147,8 +1147,24 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
 
     protected function getVersionString(): string
     {
-        $version = @simplexml_load_file($this->getPluginPath() . '/version.xml');
-        return $version ? (string) $version->release : '';
+        static $release = null;
+        if ($release === null) {
+            $version = @simplexml_load_file($this->getPluginPath() . '/version.xml');
+            $release = $version ? (string) $version->release : '';
+        }
+        return $release;
+    }
+
+    /**
+     * Asset path with the theme version, so browsers and CDNs (Cloudflare)
+     * load the new file after every theme update. OJS only adds its own
+     * "?v=<OJS version>" when the path has no query, and that value does
+     * not change when the theme is updated.
+     */
+    protected function versioned(string $path): string
+    {
+        $release = $this->getVersionString();
+        return $release !== '' ? $path . '?v=' . rawurlencode($release) : $path;
     }
 
     protected function url(string $page, string $op, array $path = [], ?string $contextPath = null): string
