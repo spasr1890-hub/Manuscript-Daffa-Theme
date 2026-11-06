@@ -13,6 +13,8 @@
 	--msd-on-primary: #fff;
 	--msd-border: rgba(0, 0, 0, .12);
 	--msd-muted: rgba(0, 0, 0, .6);
+	/* Link colour of Manuscript (article titles); used by the action row */
+	--msd-link: #4b7d92;
 	/* Space title -> authors and authors -> action row in article lists */
 	--msd-list-gap: .2rem;
 	/* Extra size of article titles in lists */
@@ -116,22 +118,52 @@
 }
 .msd-act,
 .msd-act:visited {
-	display: inline-block;
-	padding: .1rem .65rem;
-	border: 1px solid color-mix(in srgb, var(--msd-primary) 35%, transparent);
+	display: inline-flex;
+	align-items: center;
+	gap: .35em;
+	padding: .12rem .7rem;
+	border: 1px solid #d5dde0;
 	border-radius: 999px;
-	color: var(--msd-primary);
+	color: #55666d;
 	text-decoration: none;
-	background: transparent;
+	background: #fff;
 	word-break: break-word;
+	transition: color .15s, border-color .15s;
 }
 .msd-act:hover,
 .msd-act:focus,
 .msd-act.is-open {
-	background: var(--msd-primary);
-	border-color: var(--msd-primary);
-	color: var(--msd-on-primary);
+	border-color: var(--msd-link);
+	color: var(--msd-link);
+	background: #fff;
 	text-decoration: none;
+}
+.msd-act:focus-visible {
+	outline: 2px solid var(--msd-link);
+	outline-offset: 1px;
+}
+
+/* Small line icons in front of the actions (mask, so they take the text colour) */
+.msd-act::before {
+	content: "";
+	flex: none;
+	width: 1em;
+	height: 1em;
+	background: currentColor;
+	-webkit-mask: var(--msd-icon) center / contain no-repeat;
+	mask: var(--msd-icon) center / contain no-repeat;
+}
+.msd-act-abstract {
+	--msd-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M4 6h16M4 12h16M4 18h10'/%3E%3C/svg%3E");
+}
+.msd-act-pdf {
+	--msd-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4v11m0 0l-4-4m4 4l4-4M5 20h14'/%3E%3C/svg%3E");
+}
+.msd-act-doi {
+	--msd-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1'/%3E%3C/svg%3E");
+}
+.msd-act-scholar {
+	--msd-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 9l10-5 10 5-10 5z'/%3E%3Cpath d='M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5'/%3E%3C/svg%3E");
 }
 .msd-abstract {
 	margin-top: .5rem;
