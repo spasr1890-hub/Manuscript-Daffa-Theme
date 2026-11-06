@@ -262,8 +262,13 @@
 	function run() {
 		timer = null;
 		try {
-			addSelectButtons();
-			addFileSizes();
+			var features = config.features || {};
+			if (features.selectAll !== false) {
+				addSelectButtons();
+			}
+			if (features.fileSizes !== false) {
+				addFileSizes();
+			}
 		} catch (e) {
 			if (window.console) {
 				window.console.warn('manuscriptDaffa admin:', e);

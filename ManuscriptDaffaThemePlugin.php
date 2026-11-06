@@ -46,6 +46,29 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
     /** Files from this size (bytes) are marked in the back end file lists */
     public const LARGE_FILE_BYTES = 5 * 1024 * 1024;
 
+    /**
+     * Features that can be switched off in Website > Appearance > Theme.
+     * A feature added in a later version starts switched on, also for
+     * journals that saved the list before (see featureEnabled()).
+     */
+    public const FEATURES = [
+        'authorCountry',
+        'dimensions',
+        'coverage',
+        'sortByPages',
+        'homeFold',
+        'categories',
+        'archiveCards',
+        'actionRows',
+        'metaDescription',
+        'imageLoading',
+        'adminSelectAll',
+        'adminFileSizes',
+    ];
+
+    /** Request parameter for managers: recompute the issue statistics now */
+    public const REFRESH_PARAM = 'manuscriptDaffaRefresh';
+
     /** Article list text size option: value => scale factor */
     public const ARTICLE_LIST_SIZES = ['small' => 0.9, 'medium' => 1, 'large' => 1.12, 'xlarge' => 1.25];
 
@@ -66,6 +89,9 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
 
     /** @var array Data collected in handleDisplay for the output filter */
     protected array $page = [];
+
+    /** @var ?string[] Enabled features, see featureEnabled() */
+    protected ?array $enabledFeatures = null;
 
     /** @var array<int,Submission> Submissions already loaded by the page */
     protected array $submissions = [];
@@ -99,6 +125,18 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
 
         // Home country of the journal (foreign author percentage)
         $this->addHomeCountryOption();
+
+        // Features that can be switched off
+        $this->addOption('features', 'FieldOptions', [
+            'type' => 'checkbox',
+            'label' => __('plugins.themes.manuscriptDaffa.option.features.label'),
+            'description' => __('plugins.themes.manuscriptDaffa.option.features.description'),
+            'options' => array_map(fn ($feature) => [
+                'value' => $feature,
+                'label' => __('plugins.themes.manuscriptDaffa.option.features.' . $feature),
+            ], self::FEATURES),
+            'default' => self::FEATURES,
+        ]);
 
         // Text size of article lists (title, authors, buttons, abstract)
         $this->addOption('articleListSize', 'FieldOptions', [
@@ -181,6 +219,17 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         if (in_array($name, ['baseColour', 'accentColour']) && !preg_match('/^#[0-9a-fA-F]{1,6}$/', (string) $value)) {
             $value = null;
         }
+        if ($name === 'features') {
+            $value = array_values(array_intersect(self::FEATURES, (array) $value));
+            parent::saveOption($name, $value, $contextId);
+            // Remember which features existed, so features added later start on
+            if ($contextId === null) {
+                $contextId = Application::get()->getRequest()->getContext()?->getId() ?? Application::SITE_CONTEXT_ID;
+            }
+            $this->updateSetting($contextId, 'featuresKnown', self::FEATURES, 'object');
+            $this->enabledFeatures = null;
+            return;
+        }
         if ($name === 'articleListSize' && !isset(self::ARTICLE_LIST_SIZES[(string) $value])) {
             $value = 'medium';
         }
@@ -220,6 +269,48 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
     {
         $value = strtoupper(trim((string) $this->getOption('homeCountry')));
         return preg_match('/^[A-Z]{2}$/', $value) ? $value : '';
+    }
+
+    /**
+     * Is a feature switched on in the theme settings?
+     */
+    public function featureEnabled(string $feature): bool
+    {
+        if ($this->enabledFeatures === null) {
+            $enabled = $this->getOption('features');
+            if (!is_array($enabled)) {
+                $enabled = self::FEATURES;
+            } else {
+                $known = null;
+                try {
+                    $contextId = Application::get()->getRequest()->getContext()?->getId() ?? Application::SITE_CONTEXT_ID;
+                    $known = $this->getSetting($contextId, 'featuresKnown');
+                } catch (Throwable $e) {
+                    $known = null;
+                }
+                $known = is_array($known) ? $known : self::FEATURES;
+                $enabled = array_merge($enabled, array_diff(self::FEATURES, $known));
+            }
+            $this->enabledFeatures = array_values(array_unique($enabled));
+        }
+        return in_array($feature, $this->enabledFeatures, true);
+    }
+
+    /**
+     * May the current user force a refresh of the issue statistics?
+     */
+    protected function refreshRequested(): bool
+    {
+        $request = Application::get()->getRequest();
+        if (!$request->getUserVar(self::REFRESH_PARAM)) {
+            return false;
+        }
+        $user = $request->getUser();
+        $context = $request->getContext();
+        return $user && $context && (
+            $user->hasRole([Role::ROLE_ID_MANAGER, Role::ROLE_ID_SITE_ADMIN], (int) $context->getId())
+            || $user->hasRole([Role::ROLE_ID_SITE_ADMIN], Application::SITE_CONTEXT_ID)
+        );
     }
 
     /*
@@ -324,6 +415,10 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
             ),
             'sizeParam' => self::FILE_SIZE_PARAM,
             'largeBytes' => self::LARGE_FILE_BYTES,
+            'features' => [
+                'selectAll' => $this->featureEnabled('adminSelectAll'),
+                'fileSizes' => $this->featureEnabled('adminFileSizes'),
+            ],
             'labels' => [
                 'selectAll' => __('plugins.themes.manuscriptDaffa.admin.selectAll'),
                 'clearSelection' => __('plugins.themes.manuscriptDaffa.admin.clearSelection'),
@@ -386,7 +481,9 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
                 break;
             case 'frontend/pages/indexJournal.tpl':
                 $this->guard('prepare current issue', fn () => $this->prepareIssue($templateMgr, true));
-                $this->guard('prepare category cards', fn () => $this->prepareCategories($templateMgr));
+                if ($this->featureEnabled('categories')) {
+                    $this->guard('prepare category cards', fn () => $this->prepareCategories($templateMgr));
+                }
                 break;
             case 'frontend/pages/issueArchive.tpl':
                 $this->guard('prepare archive cards', fn () => $this->prepareArchive($templateMgr));
@@ -424,6 +521,13 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
     {
         $request = Application::get()->getRequest();
         $sizes = null;
+        if (!$this->featureEnabled('adminFileSizes')) {
+            if (!headers_sent()) {
+                header('Content-Type: application/json; charset=utf-8');
+                header('Cache-Control: no-store, private');
+            }
+            return json_encode(['sizes' => (object) []]);
+        }
         try {
             $sizes = FileSizes::forSubmission((int) $request->getUserVar('submissionId'));
         } catch (Throwable $e) {
@@ -480,8 +584,10 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         }
 
         if (is_array($publishedSubmissions)) {
-            $publishedSubmissions = IssueStats::sortByPages($publishedSubmissions);
-            $templateMgr->assign('publishedSubmissions', $publishedSubmissions);
+            if ($this->featureEnabled('sortByPages')) {
+                $publishedSubmissions = IssueStats::sortByPages($publishedSubmissions);
+                $templateMgr->assign('publishedSubmissions', $publishedSubmissions);
+            }
 
             $order = [];
             foreach ($publishedSubmissions as $section) {
@@ -490,14 +596,16 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
                     $order[] = (int) $article->getId();
                 }
             }
-            if ($isHome && count($order) > self::HOME_ARTICLE_LIMIT) {
+            if ($isHome && count($order) > self::HOME_ARTICLE_LIMIT && $this->featureEnabled('homeFold')) {
                 $this->page['hiddenArticles'] = array_fill_keys(array_slice($order, self::HOME_ARTICLE_LIMIT), true);
                 $this->page['issueUrl'] = $this->url('issue', 'view', [$issue->getBestIssueId()]);
             }
         }
 
-        if ($issue->getPublished()) {
-            $stats = IssueStats::get((int) $context->getId(), (int) $issue->getId(), $this->getHomeCountry());
+        if ($issue->getPublished() && $this->featureEnabled('coverage')) {
+            $issueId = (int) $issue->getId();
+            $stamps = IssueStats::stamps((int) $context->getId(), [$issueId]);
+            $stats = IssueStats::get((int) $context->getId(), $issueId, $this->getHomeCountry(), $stamps[$issueId] ?? '', $this->refreshRequested());
             $this->page['coverage'] = $stats;
             $this->page['diagnostics'][] = 'countries taken from the affiliation: ' . $stats['guessed'];
         }
@@ -571,10 +679,19 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
             $this->page['diagnostics'][] = 'archive cards: skipped, Author Origins plugin is active';
             return;
         }
+        if (!$this->featureEnabled('archiveCards')) {
+            return;
+        }
         $home = $this->getHomeCountry();
-        $stats = [];
+        $issueIds = [];
         foreach ($issues as $issue) {
-            $stats[] = IssueStats::get((int) $context->getId(), (int) $issue->getId(), $home);
+            $issueIds[] = (int) $issue->getId();
+        }
+        $stamps = IssueStats::stamps((int) $context->getId(), $issueIds);
+        $refresh = $this->refreshRequested();
+        $stats = [];
+        foreach ($issueIds as $issueId) {
+            $stats[] = IssueStats::get((int) $context->getId(), $issueId, $home, $stamps[$issueId] ?? '', $refresh);
         }
         $this->page['archive'] = $stats;
     }
@@ -622,28 +739,34 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         // One step per feature, each guarded on its own: when a step fails
         // the page keeps the result of the other steps, and the error goes
         // to the PHP error log and the diagnostic comment.
+        // [report name, feature switch, step]
         $steps = [];
         if ($template === 'frontend/pages/article.tpl') {
-            $steps['author countries'] = $this->filterArticleAuthors(...);
-            $steps['Dimensions badge'] = $this->filterDimensions(...);
+            $steps[] = ['author countries', 'authorCountry', $this->filterArticleAuthors(...)];
+            $steps[] = ['Dimensions badge', 'dimensions', $this->filterDimensions(...)];
         }
         if (in_array($template, ['frontend/pages/issue.tpl', 'frontend/pages/indexJournal.tpl'])) {
-            $steps['issue coverage'] = $this->filterCoverage(...);
+            $steps[] = ['issue coverage', 'coverage', $this->filterCoverage(...)];
         }
         if ($template === 'frontend/pages/indexJournal.tpl') {
-            $steps['homepage fold'] = $this->filterHomeFold(...);
-            $steps['category cards'] = $this->filterCategories(...);
+            $steps[] = ['homepage fold', 'homeFold', $this->filterHomeFold(...)];
+            $steps[] = ['category cards', 'categories', $this->filterCategories(...)];
         }
         if ($template === 'frontend/pages/issueArchive.tpl') {
-            $steps['archive cards'] = $this->filterArchive(...);
+            // Lazy covers belong to "image loading"; the step checks both switches
+            $steps[] = ['archive cards', null, $this->filterArchive(...)];
         }
         if (str_contains($html, '<div class="obj_article_summary">')) {
-            $steps['article action rows'] = $this->filterArticleList(...);
+            $steps[] = ['article action rows', 'actionRows', $this->filterArticleList(...)];
         }
-        $steps['image loading'] = $this->filterImages(...);
-        $steps['meta description'] = $this->filterMetaDescription(...);
+        $steps[] = ['image loading', 'imageLoading', $this->filterImages(...)];
+        $steps[] = ['meta description', 'metaDescription', $this->filterMetaDescription(...)];
 
-        foreach ($steps as $name => $step) {
+        foreach ($steps as [$name, $feature, $step]) {
+            if ($feature !== null && !$this->featureEnabled($feature)) {
+                $this->report($name, 'disabled in the theme settings');
+                continue;
+            }
             $html = $this->runStep($name, $step, $html);
         }
 
@@ -1022,7 +1145,7 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         }
 
         // Covers: lazy loading except the first one
-        for ($i = 2; $i <= $count; $i++) {
+        for ($i = 2; $i <= $count && $this->featureEnabled('imageLoading'); $i++) {
             $parts[$i] = preg_replace_callback(
                 '~^(\s*<a class="cover"[^>]*>\s*)(<img\b[^>]*>)~',
                 fn ($m) => $m[1] . Html::addAttribute($m[2], ['img'], 'loading', 'lazy'),
@@ -1032,7 +1155,9 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
 
         $stats = $this->page['archive'] ?? null;
         $hasOtherCards = stripos($html, 'author-origins') !== false || stripos($html, 'authorOrigins') !== false;
-        if ($hasOtherCards) {
+        if (!$this->featureEnabled('archiveCards')) {
+            $this->report('archive cards', 'disabled in the theme settings');
+        } elseif ($hasOtherCards) {
             $this->report('archive cards', 'skipped: cards of the Author Origins plugin are on the page');
         } elseif (!$stats) {
             $this->report('archive cards', 'skipped: no statistics (see the lines above)');
@@ -1304,6 +1429,10 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
             $lines[] = $line;
         }
         $lines[] = 'home country: ' . ($this->getHomeCountry() ?: 'not set');
+        $lines[] = 'issue statistics: cached up to ' . (IssueStats::TTL / 3600) . ' h, renewed when an article of the issue changes'
+            . ($this->refreshRequested() ? '; recomputed now (' . self::REFRESH_PARAM . ')' : '; add ?' . self::REFRESH_PARAM . '=1 to the URL to recompute now');
+        $disabled = array_diff(self::FEATURES, array_filter(self::FEATURES, $this->featureEnabled(...)));
+        $lines[] = 'features switched off: ' . ($disabled ? implode(', ', $disabled) : 'none');
         $comment = "\n<!-- manuscriptDaffa " . $this->getVersionString() . "\n  " . implode("\n  ", array_map(
             fn ($l) => str_replace('--', '- -', $l),
             $lines

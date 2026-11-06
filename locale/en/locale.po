@@ -139,3 +139,45 @@ msgstr "Large"
 
 msgid "plugins.themes.manuscriptDaffa.option.articleListSize.xlarge"
 msgstr "Extra large"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.label"
+msgstr "Theme features"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.description"
+msgstr "Switch off the features you do not want. Switched-off features do not change the pages and run no database queries. Features added in later versions start switched on."
+
+msgid "plugins.themes.manuscriptDaffa.option.features.authorCountry"
+msgstr "Country after the author affiliation (article page)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.dimensions"
+msgstr "Dimensions citation badge above the DOI (article page)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.coverage"
+msgstr "Issue Coverage box (issue page and homepage)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.sortByPages"
+msgstr "Sort articles by first page (issue page and homepage)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.homeFold"
+msgstr "Fold the current issue on the homepage after 5 articles (\"Read more\")"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.categories"
+msgstr "Category cards on the homepage"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.archiveCards"
+msgstr "Statistic cards on the Archives page"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.actionRows"
+msgstr "Action buttons in article lists (Show Abstract, Download PDF, DOI, Google Scholar)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.metaDescription"
+msgstr "Automatic meta description for search engines"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.imageLoading"
+msgstr "Image loading hints (header logo first, lazy sidebar, footer and archive covers)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.adminSelectAll"
+msgstr "Back end: \"Select all / Clear selection\" buttons"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.adminFileSizes"
+msgstr "Back end: file sizes in the workflow and reviewer file lists"
