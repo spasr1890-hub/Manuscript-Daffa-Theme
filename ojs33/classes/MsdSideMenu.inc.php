@@ -272,6 +272,8 @@ class MsdSideMenu
 
     /**
      * Host-less path and query without a trailing slash, for comparing links.
+     * A trailing "/index" (the default page or operation of OJS) is dropped,
+     * so that ".../journal" and ".../journal/index" are the same page.
      */
     public static function normaliseUrl(string $url): string
     {
@@ -279,7 +281,7 @@ class MsdSideMenu
         if ($parts === false || !isset($parts['path'])) {
             return '';
         }
-        $path = rtrim($parts['path'], '/');
+        $path = preg_replace('~(?:/index)+/*$~i', '', rtrim($parts['path'], '/'));
         return strtolower($path) . (isset($parts['query']) ? '?' . $parts['query'] : '');
     }
 

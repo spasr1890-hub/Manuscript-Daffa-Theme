@@ -329,6 +329,14 @@ test('sidebar menu: link lists in the sidebar get icons, the current page is mar
     same($page, $p->call('filterSidebarMenu', $page), 'off leaves the page alone');
 });
 
+test('sidebar menu: the journal home link is current on .../index too', function () {
+    same(\MsdSideMenu::normaliseUrl('https://aulad.org/index.php/aulad'), \MsdSideMenu::normaliseUrl('https://aulad.org/index.php/aulad/index'), 'journal home');
+    same(\MsdSideMenu::normaliseUrl('https://aulad.org/index.php/aulad/'), \MsdSideMenu::normaliseUrl('https://aulad.org/index.php/aulad/index/index'), 'journal home, longer form');
+    same(\MsdSideMenu::normaliseUrl('https://aulad.org/index.php/aulad/about'), \MsdSideMenu::normaliseUrl('https://aulad.org/index.php/aulad/about/index'), 'about');
+    check(\MsdSideMenu::normaliseUrl('https://aulad.org/index.php/aulad/about/editorialTeam') !== \MsdSideMenu::normaliseUrl('https://aulad.org/index.php/aulad/about'), 'other pages differ');
+    check(\MsdSideMenu::normaliseUrl('https://aulad.org/index.php/aulad/about/submissions#authorGuidelines') === \MsdSideMenu::normaliseUrl('https://aulad.org/index.php/aulad/about/submissions'), 'anchor ignored');
+});
+
 test('sidebar menu: links separated by line breaks and icons from the link text', function () {
     $p = plugin();
     $p->options = [];

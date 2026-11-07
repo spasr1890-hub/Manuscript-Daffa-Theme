@@ -466,6 +466,14 @@ test('sidebar menu: link lists in the sidebar get icons, the current page is mar
     same($page, $p->call('filterSidebarMenu', $page), 'off leaves the page alone');
 });
 
+test('sidebar menu: the journal home link is current on .../index too', function () {
+    same(\APP\plugins\themes\manuscriptDaffa\classes\SideMenu::normaliseUrl('https://aulad.org/index.php/aulad'), \APP\plugins\themes\manuscriptDaffa\classes\SideMenu::normaliseUrl('https://aulad.org/index.php/aulad/index'), 'journal home');
+    same(\APP\plugins\themes\manuscriptDaffa\classes\SideMenu::normaliseUrl('https://aulad.org/index.php/aulad/'), \APP\plugins\themes\manuscriptDaffa\classes\SideMenu::normaliseUrl('https://aulad.org/index.php/aulad/index/index'), 'journal home, longer form');
+    same(\APP\plugins\themes\manuscriptDaffa\classes\SideMenu::normaliseUrl('https://aulad.org/index.php/aulad/about'), \APP\plugins\themes\manuscriptDaffa\classes\SideMenu::normaliseUrl('https://aulad.org/index.php/aulad/about/index'), 'about');
+    check(\APP\plugins\themes\manuscriptDaffa\classes\SideMenu::normaliseUrl('https://aulad.org/index.php/aulad/about/editorialTeam') !== \APP\plugins\themes\manuscriptDaffa\classes\SideMenu::normaliseUrl('https://aulad.org/index.php/aulad/about'), 'other pages differ');
+    check(\APP\plugins\themes\manuscriptDaffa\classes\SideMenu::normaliseUrl('https://aulad.org/index.php/aulad/about/submissions#authorGuidelines') === \APP\plugins\themes\manuscriptDaffa\classes\SideMenu::normaliseUrl('https://aulad.org/index.php/aulad/about/submissions'), 'anchor ignored');
+});
+
 test('sidebar menu: links separated by line breaks and icons from the link text', function () {
     $p = plugin();
     $p->options = [];
