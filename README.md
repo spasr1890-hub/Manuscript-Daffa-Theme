@@ -1,4 +1,4 @@
-# Manuscript-Daffa Theme untuk OJS 3.5
+# Manuscript-Daffa Theme untuk OJS 3.5 dan 3.3
 
 Child theme dari **Default Theme** OJS 3.5, dibangun dari [Manuscript (pkp/defaultManuscript)](https://github.com/pkp/defaultManuscript), cabang `stable-3_5_0`. Tampilan Manuscript (tata letak "kertas", font lokal Montserrat/Noto Serif) tetap, ditambah fitur di bawah. Tidak ada template inti OJS yang disalin: tema menyiapkan data saat halaman ditampilkan (`handleDisplay`) lalu mengubah HTML hasil template Default Theme lewat *output filter* Smarty. Tambahan aset: satu berkas CSS kecil (`styles/manuscriptDaffa.css`), satu skrip publik kecil (`js/manuscriptDaffa.js`), satu skrip admin (`js/manuscriptDaffaAdmin.js`), dan bendera SVG lokal. Tidak ada font eksternal.
 
@@ -11,6 +11,25 @@ Child theme dari **Default Theme** OJS 3.5, dibangun dari [Manuscript (pkp/defau
 3. (Opsional) Pilih **Negara asal jurnal** di halaman yang sama untuk menampilkan persentase penulis asing.
 
 Tema ini tidak bentrok dengan plugin Manuscript bawaan (`defaultManuscript`); keduanya bisa terpasang, yang dipakai adalah yang dipilih sebagai tema.
+
+## Versi untuk OJS 3.3
+
+Setiap rilis memuat dua berkas di halaman **Releases**:
+
+| OJS | Berkas |
+|---|---|
+| 3.4 / 3.5 | `manuscriptDaffa-<versi>.tar.gz` |
+| 3.3 (PHP 7.3–8.2) | `manuscriptDaffa-ojs3.3-<versi>.tar.gz` |
+
+Keduanya memasang folder `plugins/themes/manuscriptDaffa` dengan fitur yang sama dan nomor versi yang sama. Cara pasang di OJS 3.3 sama: *Website → Plugins → Upload A New Plugin* (atau *Upgrade*), lalu pilih tema di *Website → Appearance → Theme*. Perbedaan yang perlu diketahui di OJS 3.3:
+
+- Tampilan dasar mengikuti Manuscript untuk OJS 3.3 (cabang `stable-3_3_0`).
+- Afiliasi penulis di OJS 3.3 berupa satu teks; negara ditambahkan tepat setelah teks itu, sebelum ikon ROR bila ada.
+- DOI diambil dari plugin DOI OJS 3.3; nomor terbitan artikel dibaca dari `publication_settings` untuk statistik terbitan.
+- Cache statistik disimpan di `cache/manuscriptDaffa/` di folder OJS (OJS 3.3 belum punya cache dengan masa berlaku untuk plugin).
+- Sisi admin OJS 3.3 masih memakai *grid* lama; ukuran file dibaca dari baris *grid* daftar file di halaman workflow, dasbor penulis, dan reviewer.
+
+Kode OJS 3.3 ada di folder `ojs33/` (hanya berkas yang berbeda); `tools/build-ojs33.sh` menggabungkannya dengan berkas bersama (`js/`, `flags/`, `fonts/`, `styles/manuscriptDaffa.css`).
 
 ## Fitur
 
@@ -31,6 +50,10 @@ Tema ini tidak bentrok dengan plugin Manuscript bawaan (`defaultManuscript`); ke
 - **Negara dari afiliasi bila kolom *Country* kosong.** Untuk hitungan penulis, negara, dan bendera (Issue Coverage dan kartu Archives), bagian terakhir afiliasi setelah koma dicocokkan dengan nama negara (bahasa antarmuka dan Inggris, serta singkatan umum seperti USA, UK, UAE, Korea Selatan). "Universitas Indonesia, Depok, Indonesia" dibaca Indonesia; "Universitas Indonesia" saja (tanpa negara di ujung) tidak ditebak. Kolom *Country* yang terisi selalu diutamakan, dan halaman artikel tidak berubah (negara di bawah nama penulis tetap dari kolom *Country*). Banyaknya penulis yang negaranya ditebak muncul di komentar diagnosis admin (`countries taken from the affiliation`).
 
 - **Tinggi logo header** (*Website → Appearance → Theme*): 80 px (bawaan Manuscript), 100, 120, 150 px, atau **selebar header** (banner di bawah menu pengguna). Hanya untuk layar 992 px ke atas; di layar kecil header tetap ringkas (logo maks. 30 px). Unggah logo sekitar dua kali ukuran tampil agar tajam, mis. 1650 × 160 px untuk 80 px, atau sekitar 2200 px lebar untuk banner selebar header.
+- **Posisi logo header** (kotak tepat di bawah *Tinggi logo header*): **Kiri** (bawaan), **Tengah**, atau **Kanan**. Tengah dan kanan menaruh logo di barisnya sendiri di bawah menu pengguna sehingga tidak bertumpuk. Hanya untuk layar 992 px ke atas, dan tidak berpengaruh pada pilihan *Selebar header* (logo sudah memenuhi lebar).
+- **Gaya menu sidebar** (*Website → Appearance → Theme*): daftar tautan di blok sidebar (mis. blok khusus berisi Home, Focus and Scope, Editorial Team, …) ditampilkan sebagai menu dengan ikon yang dipilih otomatis dari teks tautan (Inggris dan Indonesia, mis. *Author Fees* → kartu, *Contact Us*/*Hubungi Kami* → amplop; teks lain → ikon halaman), dan tautan halaman yang sedang dibuka disorot. Pilihan: **Kartu terang dengan ikon** (bawaan), **Tombol warna tema dengan ikon**, atau **Mati**. Dikenali: daftar `<ul><li><a>…</a></li></ul>`, tiga paragraf atau lebih yang masing-masing berisi satu tautan, atau tiga tautan atau lebih yang dipisah `<br>`. Gambar, tautan logo (Google Scholar, DOAJ, dll.) dan teks lain di blok tidak diubah. Ikon berupa gambar garis di CSS tema, tanpa Font Awesome atau berkas tambahan.
+  - Ikon bisa dipilih sendiri dengan kelas `msd_i_<nama>` pada `<li>` (OJS membiarkan atribut `class` pada `<li>`), misalnya `<li class="msd_i_fee"><a href="…">Author Fees</a></li>`. Tanpa kelas, ikon dipilih dari teks tautan. Nama ikon: `home`, `focus`, `team`, `reviewers`, `process`, `ethics`, `plagiarism`, `guide`, `fee`, `openAccess`, `ai`, `copyright`, `license`, `indexing`, `template`, `contact`, `submit`, `archive`, `announcement`, `history`, `stats`, `reader`, `library`, `privacy`, `alert`, `policy`, `info`, `language`, `page`.
+  - Jangan beri kelas atau gaya pada `<ul>` dan jangan menaruh gambar di dalam tautan menu; satu `<li>` berisi satu tautan.
 
 - **Ukuran huruf daftar artikel** (*Website → Appearance → Theme*): Kecil, Sedang (bawaan), Besar, Sangat besar. Judul, nama penulis, nomor halaman, tombol aksi, dan abstrak pada daftar artikel (beranda, daftar isi terbitan, hasil pencarian) berubah bersama dengan satu faktor skala (`--msd-list-scale`, 0,9 / 1 / 1,12 / 1,25), jadi proporsinya tetap.
 
@@ -60,6 +83,7 @@ Tema ini tidak bentrok dengan plugin Manuscript bawaan (`defaultManuscript`); ke
 | `classes/IssueStats.php` | Hitungan artikel, halaman, penulis, negara, penulis asing (cache 1 hari, diperbarui otomatis saat artikel terbitan berubah) |
 | `classes/Countries.php` | Nama negara sesuai bahasa, bendera lokal, tebakan negara dari afiliasi |
 | `classes/FileSizes.php` | Ukuran file untuk daftar file admin, beserta pemeriksaan hak akses |
+| `classes/SideMenu.php` | Menu sidebar dengan ikon dari daftar tautan di blok sidebar |
 | `classes/Html.php` | Fungsi bantu pengubah HTML |
 | `styles/manuscriptDaffa.css` | Gaya fitur baru (selain gaya Manuscript di `styles/*.less`) |
 | `js/manuscriptDaffa.js` | Show Abstract, Read more/Show less |
@@ -87,7 +111,8 @@ Tema ini tidak bentrok dengan plugin Manuscript bawaan (`defaultManuscript`); ke
   - sintaks PHP dan JavaScript, serta `php tests/run.php` (filter HTML dan fungsi bantu terhadap markup template Default Theme 3.5) di PHP 8.2, 8.3, dan 8.4;
   - `tests/smarty-filter.php` dengan Smarty 4.5.5 (versi OJS 3.5): memastikan nama *output filter* tema tidak bentrok dengan filter plugin lain;
   - `tests/check-templates.php` terhadap OJS `3_5_0-6` dan cabang `stable-3_5_0`: memastikan template OJS masih memuat markup yang dicari tema, sehingga perubahan template di rilis OJS berikutnya ketahuan sebelum tema dipasang; serta kompilasi LESS tema bersama Default Theme.
-- **Menjalankan uji sendiri:** `php tests/run.php`; `php tests/check-templates.php /path/ke/ojs`; `php tests/smarty-filter.php /path/ke/smarty/libs`.
+- **Build OJS 3.3:** uji `php tests/ojs33/run.php` di PHP 7.3, 7.4, 8.1, dan 8.2; `tools/check-php73.php` memastikan tidak ada sintaks yang lebih baru dari PHP 7.3; penanda template dan kompilasi LESS terhadap OJS `3_3_0-24` dan `stable-3_3_0`.
+- **Menjalankan uji sendiri:** `php tests/run.php`; `php tests/ojs33/run.php`; `php tests/check-templates.php /path/ke/ojs` (tambahkan `--ojs33` untuk OJS 3.3); `php tests/smarty-filter.php /path/ke/smarty/libs`; `tools/build-ojs33.sh <folder> [arsip.tar.gz]`.
 
 ## Lisensi
 

@@ -82,3 +82,60 @@ jobs:
           npx --yes less@4.2.0 --global-var="baseUrl=''" ci-build.less > "$RUNNER_TEMP/theme.css"
           grep -q 'font-display: swap' "$RUNNER_TEMP/theme.css"
           echo "Compiled $(wc -c < "$RUNNER_TEMP/theme.css") bytes of CSS"
+
+  # The OJS 3.3 build (ojs33/ + shared files, see tools/build-ojs33.sh)
+  ojs33-tests:
+    name: OJS 3.3 build (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # OJS 3.3 supports PHP 7.3 to 8.2
+        php: ['7.3', '7.4', '8.1', '8.2']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: intl, mbstring, simplexml
+          coverage: none
+      - name: PHP syntax
+        run: find ojs33 tests/ojs33 -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: No syntax newer than PHP 7.3
+        if: matrix.php == '8.2'
+        run: php tools/check-php73.php ojs33/*.php ojs33/classes/*.php tests/ojs33/*.php
+      - name: OJS 3.3 build tests
+        run: php tests/ojs33/run.php
+
+  ojs33:
+    name: OJS ${{ matrix.ojs }} templates and styles (3.3 build)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ojs: ['3_3_0-24', 'stable-3_3_0']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: theme
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: OJS ${{ matrix.ojs }} with lib/pkp
+        run: |
+          git clone --quiet --depth 1 --branch "${{ matrix.ojs }}" https://github.com/pkp/ojs.git ojs
+          git -C ojs submodule update --quiet --init --depth 1 lib/pkp
+      - name: Template markers
+        run: php theme/tests/check-templates.php ojs --ojs33
+      - name: LESS compiles with the Default Theme
+        run: |
+          theme/tools/build-ojs33.sh ojs/plugins/themes > /dev/null
+          cd ojs/plugins/themes/manuscriptDaffa/styles
+          printf '@import "../../default/styles/index.less";\n@import "index.less";\n' > ci-build.less
+          npx --yes less@4.2.0 --global-var="baseUrl=''" ci-build.less > "$RUNNER_TEMP/theme.css"
+          grep -q 'font-display: swap' "$RUNNER_TEMP/theme.css"
+          echo "Compiled $(wc -c < "$RUNNER_TEMP/theme.css") bytes of CSS"

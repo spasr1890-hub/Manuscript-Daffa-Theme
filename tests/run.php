@@ -24,10 +24,11 @@ class TestPlugin extends Plugin
     public $features = null;
     public $known = null;
     public array $fail = [];
+    public array $options = [];
 
     public function getOption($name)
     {
-        return $name === 'features' ? $this->features : null;
+        return $name === 'features' ? $this->features : ($this->options[$name] ?? null);
     }
 
     public function getSetting($contextId, $name)
@@ -413,6 +414,100 @@ test('the output filter is registered under its own name', function () {
     // other (see smarty-filter.php), e.g. with the Publication Facts Label plugin.
     $code = file_get_contents(dirname(__DIR__) . '/ManuscriptDaffaThemePlugin.php');
     check(str_contains($code, "registerFilter('output', \$this->filterOutput(...), 'manuscriptDaffa')"), 'named registerFilter call not found');
+});
+
+test('header logo height and position give the expected desktop CSS', function () {
+    $p = plugin();
+    $css = function ($height, $position) use ($p) {
+        $p->options = ['headerLogoHeight' => $height, 'headerLogoPosition' => $position];
+        return $p->call('headerLogoCss');
+    };
+    $media = '@media (min-width:992px){';
+    $row = '.has_site_logo .pkp_head_wrapper{padding-top:3.2rem}';
+    same('', $css(null, null), 'nothing saved');
+    same('', $css('80', 'left'), 'defaults');
+    same('', $css('bad', 'bad'), 'unknown values fall back to the defaults');
+    same($media . '.pkp_site_name .is_img img{max-height:120px}}', $css('120', 'left'), '120 px left');
+    same($media . $row . '.pkp_site_name{width:100%;text-align:center}}', $css('80', 'center'), '80 px centre');
+    same($media . '.pkp_site_name .is_img img{max-height:150px}' . $row . '.pkp_site_name{width:100%;text-align:right}}', $css('150', 'right'), '150 px right');
+    check(strpos($css('full', 'right'), 'text-align') === false, 'full width ignores the position');
+    same($css('full', 'left'), $css('full', 'center'), 'full width is the same for every position');
+});
+
+test('sidebar menu: link lists in the sidebar get icons, the current page is marked, the rest is left alone', function () {
+    $p = plugin();
+    $sidebar = '<div class="pkp_structure_sidebar left" role="complementary"><div class="pkp_block block_custom" id="customblock-menu"><div class="content">'
+        . '<p><img src="sinta.png" alt="SINTA"></p><p><a href="https://j.test/index.php/jt/index">Home</a></p><p>&nbsp;</p>'
+        . '<p><a href="https://j.test/index.php/jt/about/">About the Journal</a></p><p><strong><a href="/index.php/jt/fees">Author Fees</a></strong></p>'
+        . '<p><a href="https://j.test/index.php/jt/indexing">Abstracting &amp; Indexing</a></p></div></div>'
+        . '<div class="pkp_block block_custom"><div class="content"><p><a href="https://scholar.google.com"><img src="gs.png"></a></p>'
+        . '<p><a href="https://doaj.org"><img src="doaj.png"></a></p><p><a href="https://garuda.kemdikbud.go.id"><img src="garuda.png"></a></p></div></div>'
+        . '<div class="pkp_block block_information"><div class="content"><ul><li><a href="/r">For Readers</a></li><li><a href="/a">For Authors</a></li><li><a href="/l">For Librarians</a></li></ul></div></div>'
+        . '</div><!-- pkp_sidebar.left -->';
+    $main = '<div class="pkp_structure_main"><ul><li><a href="/x">Home</a></li><li><a href="/y">Contact</a></li></ul></div>';
+    $page = '<html><body>' . $main . $sidebar . '</body></html>';
+
+    $p->options = ['sidebarMenu' => 'soft'];
+    $out = $p->call('filterSidebarMenu', $page);
+    check(strpos($out, $main) !== false, 'lists outside the sidebar are not changed');
+    same(2, substr_count($out, '<ul class="msd_menu msd_menu_soft"'), 'two menus (custom block, Information block)');
+    check(strpos($out, '<img src="sinta.png" alt="SINTA">') !== false && strpos($out, '<p><a href="https://doaj.org"><img src="doaj.png"></a></p>') !== false, 'images and logo links kept');
+    check((bool) preg_match('~<a href="https://j.test/index.php/jt/about/" aria-current="page" class="msd_menu_link msd_i_info msd_menu_current">~', $out), 'current page marked (trailing slash ignored)');
+    same(1, substr_count($out, 'aria-current'), 'only one current link');
+    foreach (['home', 'fee', 'indexing', 'reader', 'guide', 'library'] as $icon) {
+        check(strpos($out, 'msd_i_' . $icon . '"') !== false || strpos($out, 'msd_i_' . $icon . ' ') !== false, 'icon ' . $icon);
+    }
+    check(strpos($out, '<span class="msd_menu_text">Abstracting &amp; Indexing</span>') !== false, 'link text kept');
+    check(strpos($out, '<p>&nbsp;</p>') === false, 'empty paragraph inside the run removed');
+
+    $p->options = ['sidebarMenu' => 'solid'];
+    check(strpos($p->call('filterSidebarMenu', $page), 'msd_menu msd_menu_solid') !== false, 'solid style');
+    $p->options = ['sidebarMenu' => 'off'];
+    same($page, $p->call('filterSidebarMenu', $page), 'off leaves the page alone');
+});
+
+test('sidebar menu: the journal home link is current on .../index too', function () {
+    same(\APP\plugins\themes\manuscriptDaffa\classes\SideMenu::normaliseUrl('https://aulad.org/index.php/aulad'), \APP\plugins\themes\manuscriptDaffa\classes\SideMenu::normaliseUrl('https://aulad.org/index.php/aulad/index'), 'journal home');
+    same(\APP\plugins\themes\manuscriptDaffa\classes\SideMenu::normaliseUrl('https://aulad.org/index.php/aulad/'), \APP\plugins\themes\manuscriptDaffa\classes\SideMenu::normaliseUrl('https://aulad.org/index.php/aulad/index/index'), 'journal home, longer form');
+    same(\APP\plugins\themes\manuscriptDaffa\classes\SideMenu::normaliseUrl('https://aulad.org/index.php/aulad/about'), \APP\plugins\themes\manuscriptDaffa\classes\SideMenu::normaliseUrl('https://aulad.org/index.php/aulad/about/index'), 'about');
+    check(\APP\plugins\themes\manuscriptDaffa\classes\SideMenu::normaliseUrl('https://aulad.org/index.php/aulad/about/editorialTeam') !== \APP\plugins\themes\manuscriptDaffa\classes\SideMenu::normaliseUrl('https://aulad.org/index.php/aulad/about'), 'other pages differ');
+    check(\APP\plugins\themes\manuscriptDaffa\classes\SideMenu::normaliseUrl('https://aulad.org/index.php/aulad/about/submissions#authorGuidelines') === \APP\plugins\themes\manuscriptDaffa\classes\SideMenu::normaliseUrl('https://aulad.org/index.php/aulad/about/submissions'), 'anchor ignored');
+});
+
+test('sidebar menu: an icon chosen in the block wins over the link text', function () {
+    $menu = new \APP\plugins\themes\manuscriptDaffa\classes\SideMenu('soft', '');
+    $out = $menu->apply('<ul><li><a class="msd_i_stats" href="/a">Home</a></li><li><a href="/b" class="x msd_i_unknown">Contact Us</a></li>'
+        . '<li class="msd_i_reader"><a href="/c">Home</a></li></ul>');
+    check(strpos($out, '<a class="msd_i_stats msd_menu_link" href="/a">') !== false, 'chosen icon on the link kept, no second icon: ' . $out);
+    check(strpos($out, '<li class="msd_i_reader"><a href="/c" class="msd_menu_link">') !== false, 'chosen icon on the item kept, no second icon');
+    check(strpos($out, 'class="x msd_i_unknown msd_menu_link msd_i_contact"') !== false, 'unknown icon name: icon from the text');
+});
+
+test('sidebar menu: links separated by line breaks and icons from the link text', function () {
+    $p = plugin();
+    $p->options = [];
+    $page = '<div class="pkp_structure_sidebar left" role="complementary"><div class="content"><p><a href="/a">Beranda</a><br><a href="/b">Tim Redaksi</a><br />'
+        . "\n" . '<a href="/c">Hubungi Kami</a></p></div></div><!-- pkp_sidebar.left -->';
+    $out = $p->call('filterSidebarMenu', $page);
+    check(strpos($out, '<div class="content"><ul class="msd_menu msd_menu_soft"><li><a href="/a" class="msd_menu_link msd_i_home">') !== false, 'paragraph replaced by the menu: ' . $out);
+    check(strpos($out, '<br') === false && strpos($out, '<p>') === false, 'no breaks or paragraph left');
+    $expected = ['Home' => 'home', 'Focus and Scope' => 'focus', 'Editorial Team' => 'team', 'Peer Reviewers' => 'reviewers',
+        'Peer Review Process' => 'process', 'Publication Ethics' => 'ethics', 'Plagiarism Policy' => 'plagiarism', 'Author Guidelines' => 'guide',
+        'Author Fees' => 'fee', 'Article Processing Charge' => 'fee', 'Open Access Policy' => 'openAccess', 'Generative AI Policy' => 'ai',
+        'Copyright Notice' => 'copyright', 'Journal License' => 'license', 'Abstracting & Indexing' => 'indexing', 'Article Template' => 'template',
+        'Contact Us' => 'contact', 'Kebijakan Akses Terbuka' => 'openAccess', 'Mitra Bestari' => 'reviewers', 'Pedoman Penulis' => 'guide',
+        'Something else' => 'page'];
+    foreach ($expected as $text => $icon) {
+        same($icon, \APP\plugins\themes\manuscriptDaffa\classes\SideMenu::iconFor($text), $text);
+    }
+});
+
+test('the OJS 3.3 copy of the sidebar menu class is the same', function () {
+    $body = function ($file) {
+        $code = file_get_contents(dirname(__DIR__) . '/' . $file);
+        return substr($code, strpos($code, 'class ', strpos($code, '*/')));
+    };
+    same($body('classes/SideMenu.php'), str_replace('class MsdSideMenu', 'class SideMenu', $body('ojs33/classes/MsdSideMenu.inc.php')), 'class body');
 });
 
 echo "\n" . ($count - $failures) . " of {$count} tests passed\n";

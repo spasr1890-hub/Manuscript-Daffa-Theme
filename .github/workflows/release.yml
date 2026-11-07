@@ -1,7 +1,9 @@
-# Publishes a GitHub release with the installable plugin archive whenever the
-# version in version.xml on main has no release yet:
-#   manuscriptDaffa-<version>.tar.gz  (folder manuscriptDaffa/, without tests)
-# Upload it in OJS: Website > Plugins > Upload A New Plugin (or Upgrade).
+# Publishes a GitHub release with the installable plugin archives whenever
+# the version in version.xml on main has no release yet:
+#   manuscriptDaffa-<version>.tar.gz         OJS 3.4 / 3.5
+#   manuscriptDaffa-ojs3.3-<version>.tar.gz  OJS 3.3 (built from ojs33/)
+# Both hold the folder manuscriptDaffa/, without tests.
+# Upload in OJS: Website > Plugins > Upload A New Plugin (or Upgrade).
 name: Release
 
 on:
@@ -52,30 +54,40 @@ jobs:
         run: |
           find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l > /dev/null
           php tests/run.php
+          php tests/ojs33/run.php
       - name: Build the plugin archive
         if: steps.exists.outputs.exists == 'false'
         run: |
           file="manuscriptDaffa-${{ steps.version.outputs.release }}.tar.gz"
           git archive --format=tar.gz --prefix=manuscriptDaffa/ -o "$file" HEAD
           tar -tzf "$file" | grep -q '^manuscriptDaffa/version.xml$'
-          if tar -tzf "$file" | grep -qE '^manuscriptDaffa/(tests|\.github)/'; then
+          if tar -tzf "$file" | grep -qE '^manuscriptDaffa/(tests|\.github|ojs33|tools)/'; then
             echo "Development files in the archive" >&2
             exit 1
           fi
           echo "FILE=$file" >> "$GITHUB_ENV"
+          file33="manuscriptDaffa-ojs3.3-${{ steps.version.outputs.release }}.tar.gz"
+          tools/build-ojs33.sh "$RUNNER_TEMP/ojs33" "$file33"
+          tar -tzf "$file33" | grep -q '^manuscriptDaffa/ManuscriptDaffaThemePlugin.inc.php$'
+          echo "FILE33=$file33" >> "$GITHUB_ENV"
       - name: Publish the release
         if: steps.exists.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           {
-            echo "Manuscript-Daffa ${{ steps.version.outputs.release }} for OJS 3.5."
+            echo "Manuscript-Daffa ${{ steps.version.outputs.release }}."
             echo
-            echo "**Install or update:** download \`$FILE\` below, then in OJS go to"
+            echo "| OJS version | File |"
+            echo "|---|---|"
+            echo "| OJS 3.4 / 3.5 | \`$FILE\` |"
+            echo "| OJS 3.3 (PHP 7.3+) | \`$FILE33\` |"
+            echo
+            echo "**Install or update:** download the file for your OJS version below, then in OJS go to"
             echo "*Website → Plugins*: *Upload A New Plugin* for a first install, or"
             echo "*Upgrade* in the Manuscript-Daffa row to update."
           } > notes.md
-          gh release create "${{ steps.version.outputs.tag }}" "$FILE" \
+          gh release create "${{ steps.version.outputs.tag }}" "$FILE" "$FILE33" \
             --target "$GITHUB_SHA" \
             --title "Manuscript-Daffa ${{ steps.version.outputs.release }}" \
             --notes-file notes.md \

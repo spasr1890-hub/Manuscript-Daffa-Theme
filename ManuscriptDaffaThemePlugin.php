@@ -23,6 +23,7 @@ use APP\plugins\themes\manuscriptDaffa\classes\Countries;
 use APP\plugins\themes\manuscriptDaffa\classes\FileSizes;
 use APP\plugins\themes\manuscriptDaffa\classes\Html;
 use APP\plugins\themes\manuscriptDaffa\classes\IssueStats;
+use APP\plugins\themes\manuscriptDaffa\classes\SideMenu;
 use APP\submission\Submission;
 use APP\template\TemplateManager;
 use PKP\core\PKPString;
@@ -76,6 +77,12 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
 
     /** Choices of the header logo height option (desktop) */
     public const HEADER_LOGO_HEIGHTS = ['80', '100', '120', '150', 'full'];
+
+    /** Choices of the header logo position option (desktop) */
+    public const HEADER_LOGO_POSITIONS = ['left', 'center', 'right'];
+
+    /** Choices of the sidebar menu style option */
+    public const SIDEBAR_MENU_STYLES = ['soft', 'solid', 'off'];
 
     /** Font preloaded on public pages (must match the URL in styles/fonts.less) */
     public const PRELOAD_FONT = 'fonts/montserrat-v15-vietnamese_latin-ext_latin_cyrillic-ext_cyrillic-700.woff2';
@@ -164,6 +171,30 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
             'default' => '80',
         ]);
 
+        // Position of the header logo on desktop screens
+        $this->addOption('headerLogoPosition', 'FieldOptions', [
+            'type' => 'radio',
+            'label' => __('plugins.themes.manuscriptDaffa.option.headerLogoPosition.label'),
+            'description' => __('plugins.themes.manuscriptDaffa.option.headerLogoPosition.description'),
+            'options' => array_map(fn ($value) => [
+                'value' => $value,
+                'label' => __('plugins.themes.manuscriptDaffa.option.headerLogoPosition.' . $value),
+            ], self::HEADER_LOGO_POSITIONS),
+            'default' => 'left',
+        ]);
+
+        // Lists of links in the sidebar blocks shown as a menu with icons
+        $this->addOption('sidebarMenu', 'FieldOptions', [
+            'type' => 'radio',
+            'label' => __('plugins.themes.manuscriptDaffa.option.sidebarMenu.label'),
+            'description' => __('plugins.themes.manuscriptDaffa.option.sidebarMenu.description'),
+            'options' => array_map(fn ($value) => [
+                'value' => $value,
+                'label' => __('plugins.themes.manuscriptDaffa.option.sidebarMenu.' . $value),
+            ], self::SIDEBAR_MENU_STYLES),
+            'default' => 'soft',
+        ]);
+
         // Dequeue any fonts loaded by parent theme
         if (method_exists($this, 'removeStyle')) {
             for ($i = 0; $i < 11; $i++) {
@@ -234,6 +265,12 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         }
         if ($name === 'articleListSize' && !isset(self::ARTICLE_LIST_SIZES[(string) $value])) {
             $value = 'medium';
+        }
+        if ($name === 'sidebarMenu' && !in_array((string) $value, self::SIDEBAR_MENU_STYLES, true)) {
+            $value = 'soft';
+        }
+        if ($name === 'headerLogoPosition' && !in_array((string) $value, self::HEADER_LOGO_POSITIONS, true)) {
+            $value = 'left';
         }
         if ($name === 'headerLogoHeight' && !in_array((string) $value, self::HEADER_LOGO_HEIGHTS, true)) {
             $value = '80';
@@ -336,28 +373,45 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
     }
 
     /**
-     * CSS for the header logo height option. Desktop only (992 px and up);
-     * small screens keep the compact header of the Default Theme.
+     * CSS for the header logo options (desktop screens, 992 px and wider;
+     * small screens keep the compact header of the Default Theme).
      *
+     * Height:
      * - 80 (default): the Manuscript size, at most 80 px high and 75 % wide;
-     * - 100/120/150: a taller logo, still next to the user menu;
+     * - 100/120/150: a taller logo;
      * - full: a banner across the whole header, below the user menu.
+     *
+     * Position (not for "full", which fills the width): left (default) keeps
+     * the logo next to the user menu; center and right put it on its own row
+     * below the user menu, across the whole width, so they never overlap.
      */
     protected function headerLogoCss(): string
     {
         $height = (string) $this->getOption('headerLogoHeight');
-        if (!in_array($height, self::HEADER_LOGO_HEIGHTS, true) || $height === '80') {
-            return '';
+        if (!in_array($height, self::HEADER_LOGO_HEIGHTS, true)) {
+            $height = '80';
         }
+        $position = (string) $this->getOption('headerLogoPosition');
+        if (!in_array($position, self::HEADER_LOGO_POSITIONS, true)) {
+            $position = 'left';
+        }
+
+        $rules = '';
         if ($height === 'full') {
-            return '@media (min-width:992px){'
-                . '.has_site_logo .pkp_head_wrapper{padding-top:3.2rem}'
+            $rules .= '.has_site_logo .pkp_head_wrapper{padding-top:3.2rem}'
                 . '.pkp_site_name{width:100%}'
                 . '.pkp_site_name .is_img{display:block}'
-                . '.pkp_site_name .is_img img{max-height:none;width:100%;height:auto}'
-                . '}';
+                . '.pkp_site_name .is_img img{max-height:none;width:100%;height:auto}';
+        } else {
+            if ($height !== '80') {
+                $rules .= '.pkp_site_name .is_img img{max-height:' . (int) $height . 'px}';
+            }
+            if ($position !== 'left') {
+                $rules .= '.has_site_logo .pkp_head_wrapper{padding-top:3.2rem}'
+                    . '.pkp_site_name{width:100%;text-align:' . $position . '}';
+            }
         }
-        return '@media (min-width:992px){.pkp_site_name .is_img img{max-height:' . (int) $height . 'px}}';
+        return $rules === '' ? '' : '@media (min-width:992px){' . $rules . '}';
     }
 
     /**
@@ -764,6 +818,7 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         if (str_contains($html, '<div class="obj_article_summary">')) {
             $steps[] = ['article action rows', 'actionRows', $this->filterArticleList(...)];
         }
+        $steps[] = ['sidebar menu', null, $this->filterSidebarMenu(...)];
         $steps[] = ['image loading', 'imageLoading', $this->filterImages(...)];
         $steps[] = ['meta description', 'metaDescription', $this->filterMetaDescription(...)];
         $steps[] = ['Open Graph', 'openGraph', $this->filterOpenGraph(...)];
@@ -1362,6 +1417,28 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
             'doi' => $this->doiOf($publication),
             'title' => $title,
         ];
+    }
+
+    /**
+     * Sidebar: lists of links in the blocks become a menu with icons
+     * (theme option "Sidebar menu style", see classes/SideMenu.php).
+     */
+    protected function filterSidebarMenu(string $html): string
+    {
+        $style = (string) $this->getOption('sidebarMenu');
+        if (!in_array($style, self::SIDEBAR_MENU_STYLES, true)) {
+            $style = 'soft';
+        }
+        if ($style === 'off') {
+            $this->report('sidebar menu', 'off in the theme settings');
+            return $html;
+        }
+        $menu = new SideMenu($style, (string) Application::get()->getRequest()->getRequestUrl());
+        $html = Html::region($html, '<div class="pkp_structure_sidebar', '</div><!-- pkp_sidebar.left -->', [$menu, 'apply']);
+        $this->report('sidebar menu', $menu->menus
+            ? sprintf('%d menus with %d links (%s)', $menu->menus, $menu->links, $style)
+            : 'no list of links found in the sidebar');
+        return $html;
     }
 
     /**

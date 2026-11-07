@@ -1,0 +1,216 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-11-06T00:00:00+00:00\n"
+"PO-Revision-Date: 2026-11-06T00:00:00+00:00\n"
+"Language: en_US\n"
+
+msgid "plugins.themes.manuscriptDaffa.name"
+msgstr "Manuscript-Daffa"
+
+msgid "plugins.themes.manuscriptDaffa.description"
+msgstr "A light Manuscript child theme of the Default Theme with issue coverage, author countries, article action buttons, citation badges and back end helpers."
+
+msgid "plugins.themes.manuscriptDaffa.option.typography.montserrat_notoSerif"
+msgstr "Montserrat/Noto Serif"
+
+msgid "plugins.themes.manuscriptDaffa.option.accentColour.label"
+msgstr "Accent Colour"
+
+msgid "plugins.themes.manuscriptDaffa.option.homeCountry.label"
+msgstr "Home country of the journal"
+
+msgid "plugins.themes.manuscriptDaffa.option.homeCountry.description"
+msgstr "Used to show the share of foreign authors in the Issue Coverage box and on the Archives cards. Leave empty to hide it."
+
+msgid "plugins.themes.manuscriptDaffa.option.homeCountry.textDescription"
+msgstr "Two-letter country code of the journal, for example ID for Indonesia. Leave empty to hide the share of foreign authors."
+
+msgid "plugins.themes.manuscriptDaffa.option.homeCountry.none"
+msgstr "(not set)"
+
+msgid "plugins.themes.manuscriptDaffa.list.showAbstract"
+msgstr "Show Abstract"
+
+msgid "plugins.themes.manuscriptDaffa.list.hideAbstract"
+msgstr "Hide Abstract"
+
+msgid "plugins.themes.manuscriptDaffa.list.downloadPdf"
+msgstr "Download PDF"
+
+msgid "plugins.themes.manuscriptDaffa.list.scholar"
+msgstr "Check in Google Scholar"
+
+msgid "plugins.themes.manuscriptDaffa.home.readMore"
+msgstr "Read more"
+
+msgid "plugins.themes.manuscriptDaffa.home.showLess"
+msgstr "Show less"
+
+msgid "plugins.themes.manuscriptDaffa.coverage.title"
+msgstr "Issue Coverage: {$authors} Author(s) from {$countries} Country(s)"
+
+msgid "plugins.themes.manuscriptDaffa.coverage.articles"
+msgstr "Articles: {$count}"
+
+msgid "plugins.themes.manuscriptDaffa.coverage.pages"
+msgstr "Total pages: {$count}"
+
+msgid "plugins.themes.manuscriptDaffa.coverage.foreign"
+msgstr "Foreign authors: {$count} ({$percent}%)"
+
+msgid "plugins.themes.manuscriptDaffa.coverage.authorCount"
+msgstr "({$count})"
+
+msgid "plugins.themes.manuscriptDaffa.archive.authors"
+msgstr "Authors"
+
+msgid "plugins.themes.manuscriptDaffa.archive.countries"
+msgstr "Countries"
+
+msgid "plugins.themes.manuscriptDaffa.archive.articles"
+msgstr "Articles"
+
+msgid "plugins.themes.manuscriptDaffa.archive.pages"
+msgstr "{$count} pages"
+
+msgid "plugins.themes.manuscriptDaffa.archive.foreign"
+msgstr "{$percent}% foreign"
+
+msgid "plugins.themes.manuscriptDaffa.categories.title"
+msgstr "Categories"
+
+msgid "plugins.themes.manuscriptDaffa.categories.articles"
+msgstr "{$count} article(s) in this issue"
+
+msgid "plugins.themes.manuscriptDaffa.categories.viewAll"
+msgstr "View all articles in this category"
+
+msgid "plugins.themes.manuscriptDaffa.admin.selectAll"
+msgstr "Select all"
+
+msgid "plugins.themes.manuscriptDaffa.admin.clearSelection"
+msgstr "Clear selection"
+
+msgid "plugins.themes.manuscriptDaffa.admin.largeFile"
+msgstr "Large file (5 MB or more), often caused by fonts embedded in a Word document"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.label"
+msgstr "Header logo height"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.description"
+msgstr "Height of the logo in the header on desktop screens (992 px and wider). Upload a logo about twice the chosen size so it stays sharp; \"Full width\" works best for a wide banner (about 2200 px wide). Small screens always use the compact header."
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.80"
+msgstr "80 px (default)"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.100"
+msgstr "100 px"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.120"
+msgstr "120 px"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.150"
+msgstr "150 px"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.full"
+msgstr "Full width of the header (banner)"
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.label"
+msgstr "Article list text size"
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.description"
+msgstr "Size of the text in article lists (homepage, issue table of contents, search results): title, authors, action buttons and abstract change together."
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.small"
+msgstr "Small"
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.medium"
+msgstr "Medium (default)"
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.large"
+msgstr "Large"
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.xlarge"
+msgstr "Extra large"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.label"
+msgstr "Theme features"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.description"
+msgstr "Switch off the features you do not want. Switched-off features do not change the pages and run no database queries. Features added in later versions start switched on."
+
+msgid "plugins.themes.manuscriptDaffa.option.features.authorCountry"
+msgstr "Country after the author affiliation (article page)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.dimensions"
+msgstr "Dimensions citation badge above the DOI (article page)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.coverage"
+msgstr "Issue Coverage box (issue page and homepage)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.sortByPages"
+msgstr "Sort articles by first page (issue page and homepage)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.homeFold"
+msgstr "Fold the current issue on the homepage after 5 articles (\"Read more\")"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.categories"
+msgstr "Category cards on the homepage"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.archiveCards"
+msgstr "Statistic cards on the Archives page"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.actionRows"
+msgstr "Action buttons in article lists (Show Abstract, Download PDF, DOI, Google Scholar)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.metaDescription"
+msgstr "Automatic meta description for search engines"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.imageLoading"
+msgstr "Image loading hints (header logo first, lazy sidebar, footer and archive covers)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.adminSelectAll"
+msgstr "Back end: \"Select all / Clear selection\" buttons"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.adminFileSizes"
+msgstr "Back end: file sizes in the workflow and reviewer file lists"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.openGraph"
+msgstr "Link previews for WhatsApp, Facebook and others (Open Graph tags)"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoPosition.label"
+msgstr "Header logo position"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoPosition.description"
+msgstr "Position of the logo in the header on desktop screens (992 px and wider). Centre and right put the logo on its own row below the user menu. Not used with \"Full width of the header\", which fills the width."
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoPosition.left"
+msgstr "Left (default)"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoPosition.center"
+msgstr "Centre"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoPosition.right"
+msgstr "Right"
+
+msgid "plugins.themes.manuscriptDaffa.option.sidebarMenu.label"
+msgstr "Sidebar menu style"
+
+msgid "plugins.themes.manuscriptDaffa.option.sidebarMenu.description"
+msgstr "Lists of links in the sidebar blocks (for example a custom block with Home, Focus and Scope, Editorial Team, ...) are shown as a menu with an icon chosen from the link text, and the link of the current page is highlighted. Recognised: a list (one link per item), three or more paragraphs with one link each, or three or more links separated by line breaks. Images, logo links and other text in the blocks are not changed."
+
+msgid "plugins.themes.manuscriptDaffa.option.sidebarMenu.soft"
+msgstr "Light cards with icons (default)"
+
+msgid "plugins.themes.manuscriptDaffa.option.sidebarMenu.solid"
+msgstr "Buttons in the theme colour with icons"
+
+msgid "plugins.themes.manuscriptDaffa.option.sidebarMenu.off"
+msgstr "Off (links as written in the block)"
