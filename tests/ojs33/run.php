@@ -17,10 +17,11 @@ class TestPlugin extends ManuscriptDaffaThemePlugin
     public $features = null;
     public $known = null;
     public $fail = [];
+    public $options = [];
 
     public function getOption($name)
     {
-        return $name === 'features' ? $this->features : null;
+        return $name === 'features' ? $this->features : ($this->options[$name] ?? null);
     }
 
     public function getSetting($contextId, $name)
@@ -276,6 +277,24 @@ test('the output filter is registered under its own name', function () {
     $code = file_get_contents(dirname(__DIR__, 2) . '/ojs33/ManuscriptDaffaThemePlugin.inc.php');
     check(strpos($code, "registerFilter('output', [\$this, 'filterOutput'], 'manuscriptDaffa')") !== false, 'named registerFilter call not found');
     check(strpos($code, "HookRegistry::register('TemplateManager::display', [\$this, 'handleDisplay'], HOOK_SEQUENCE_CORE)") !== false, 'display hook');
+});
+
+test('header logo height and position give the expected desktop CSS', function () {
+    $p = plugin();
+    $css = function ($height, $position) use ($p) {
+        $p->options = ['headerLogoHeight' => $height, 'headerLogoPosition' => $position];
+        return $p->call('headerLogoCss');
+    };
+    $media = '@media (min-width:992px){';
+    $row = '.has_site_logo .pkp_head_wrapper{padding-top:3.2rem}';
+    same('', $css(null, null), 'nothing saved');
+    same('', $css('80', 'left'), 'defaults');
+    same('', $css('bad', 'bad'), 'unknown values fall back to the defaults');
+    same($media . '.pkp_site_name .is_img img{max-height:120px}}', $css('120', 'left'), '120 px left');
+    same($media . $row . '.pkp_site_name{width:100%;text-align:center}}', $css('80', 'center'), '80 px centre');
+    same($media . '.pkp_site_name .is_img img{max-height:150px}' . $row . '.pkp_site_name{width:100%;text-align:right}}', $css('150', 'right'), '150 px right');
+    check(strpos($css('full', 'right'), 'text-align') === false, 'full width ignores the position');
+    same($css('full', 'left'), $css('full', 'center'), 'full width is the same for every position');
 });
 
 echo "\n" . ($count - $failures) . " of {$count} tests passed\n";

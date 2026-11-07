@@ -184,3 +184,18 @@ msgstr "Back end: file sizes in the workflow and reviewer file lists"
 
 msgid "plugins.themes.manuscriptDaffa.option.features.openGraph"
 msgstr "Link previews for WhatsApp, Facebook and others (Open Graph tags)"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoPosition.label"
+msgstr "Header logo position"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoPosition.description"
+msgstr "Position of the logo in the header on desktop screens (992 px and wider). Centre and right put the logo on its own row below the user menu. Not used with \"Full width of the header\", which fills the width."
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoPosition.left"
+msgstr "Left (default)"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoPosition.center"
+msgstr "Centre"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoPosition.right"
+msgstr "Right"

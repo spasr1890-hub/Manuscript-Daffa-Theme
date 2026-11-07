@@ -70,6 +70,9 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
     /** Choices of the header logo height option (desktop) */
     public const HEADER_LOGO_HEIGHTS = ['80', '100', '120', '150', 'full'];
 
+    /** Choices of the header logo position option (desktop) */
+    public const HEADER_LOGO_POSITIONS = ['left', 'center', 'right'];
+
     /** Font preloaded on public pages (must match the URL in styles/fonts.less) */
     public const PRELOAD_FONT = 'fonts/montserrat-v15-vietnamese_latin-ext_latin_cyrillic-ext_cyrillic-700.woff2';
 
@@ -148,6 +151,15 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
             'default' => '80',
         ]);
 
+        // Position of the header logo on desktop screens
+        $this->addOption('headerLogoPosition', 'FieldOptions', [
+            'type' => 'radio',
+            'label' => __('plugins.themes.manuscriptDaffa.option.headerLogoPosition.label'),
+            'description' => __('plugins.themes.manuscriptDaffa.option.headerLogoPosition.description'),
+            'options' => $this->optionList('headerLogoPosition', self::HEADER_LOGO_POSITIONS),
+            'default' => 'left',
+        ]);
+
         // Dequeue any fonts loaded by parent theme
         if (method_exists($this, 'removeStyle')) {
             for ($i = 0; $i < 11; $i++) {
@@ -219,6 +231,9 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         }
         if ($name === 'articleListSize' && !isset(self::ARTICLE_LIST_SIZES[(string) $value])) {
             $value = 'medium';
+        }
+        if ($name === 'headerLogoPosition' && !in_array((string) $value, self::HEADER_LOGO_POSITIONS, true)) {
+            $value = 'left';
         }
         if ($name === 'headerLogoHeight' && !in_array((string) $value, self::HEADER_LOGO_HEIGHTS, true)) {
             $value = '80';
@@ -337,28 +352,45 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
     }
 
     /**
-     * CSS for the header logo height option. Desktop only (992 px and up);
-     * small screens keep the compact header of the Default Theme.
+     * CSS for the header logo options (desktop screens, 992 px and wider;
+     * small screens keep the compact header of the Default Theme).
      *
+     * Height:
      * - 80 (default): the Manuscript size, at most 80 px high and 75 % wide;
-     * - 100/120/150: a taller logo, still next to the user menu;
+     * - 100/120/150: a taller logo;
      * - full: a banner across the whole header, below the user menu.
+     *
+     * Position (not for "full", which fills the width): left (default) keeps
+     * the logo next to the user menu; center and right put it on its own row
+     * below the user menu, across the whole width, so they never overlap.
      */
     protected function headerLogoCss(): string
     {
         $height = (string) $this->getOption('headerLogoHeight');
-        if (!in_array($height, self::HEADER_LOGO_HEIGHTS, true) || $height === '80') {
-            return '';
+        if (!in_array($height, self::HEADER_LOGO_HEIGHTS, true)) {
+            $height = '80';
         }
+        $position = (string) $this->getOption('headerLogoPosition');
+        if (!in_array($position, self::HEADER_LOGO_POSITIONS, true)) {
+            $position = 'left';
+        }
+
+        $rules = '';
         if ($height === 'full') {
-            return '@media (min-width:992px){'
-                . '.has_site_logo .pkp_head_wrapper{padding-top:3.2rem}'
+            $rules .= '.has_site_logo .pkp_head_wrapper{padding-top:3.2rem}'
                 . '.pkp_site_name{width:100%}'
                 . '.pkp_site_name .is_img{display:block}'
-                . '.pkp_site_name .is_img img{max-height:none;width:100%;height:auto}'
-                . '}';
+                . '.pkp_site_name .is_img img{max-height:none;width:100%;height:auto}';
+        } else {
+            if ($height !== '80') {
+                $rules .= '.pkp_site_name .is_img img{max-height:' . (int) $height . 'px}';
+            }
+            if ($position !== 'left') {
+                $rules .= '.has_site_logo .pkp_head_wrapper{padding-top:3.2rem}'
+                    . '.pkp_site_name{width:100%;text-align:' . $position . '}';
+            }
         }
-        return '@media (min-width:992px){.pkp_site_name .is_img img{max-height:' . (int) $height . 'px}}';
+        return $rules === '' ? '' : '@media (min-width:992px){' . $rules . '}';
     }
 
     /**

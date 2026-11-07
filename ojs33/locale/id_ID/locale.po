@@ -184,3 +184,18 @@ msgstr "Admin: ukuran file di daftar file workflow dan reviewer"
 
 msgid "plugins.themes.manuscriptDaffa.option.features.openGraph"
 msgstr "Pratinjau tautan untuk WhatsApp, Facebook, dll. (tag Open Graph)"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoPosition.label"
+msgstr "Posisi logo header"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoPosition.description"
+msgstr "Posisi logo di header pada layar desktop (lebar 992 px ke atas). Tengah dan kanan menaruh logo di barisnya sendiri di bawah menu pengguna. Tidak berlaku untuk \"Selebar header\", yang memenuhi seluruh lebar."
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoPosition.left"
+msgstr "Kiri (bawaan)"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoPosition.center"
+msgstr "Tengah"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoPosition.right"
+msgstr "Kanan"
