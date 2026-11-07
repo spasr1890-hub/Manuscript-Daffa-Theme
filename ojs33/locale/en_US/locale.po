@@ -199,3 +199,18 @@ msgstr "Centre"
 
 msgid "plugins.themes.manuscriptDaffa.option.headerLogoPosition.right"
 msgstr "Right"
+
+msgid "plugins.themes.manuscriptDaffa.option.sidebarMenu.label"
+msgstr "Sidebar menu style"
+
+msgid "plugins.themes.manuscriptDaffa.option.sidebarMenu.description"
+msgstr "Lists of links in the sidebar blocks (for example a custom block with Home, Focus and Scope, Editorial Team, ...) are shown as a menu with an icon chosen from the link text, and the link of the current page is highlighted. Recognised: a list (one link per item), three or more paragraphs with one link each, or three or more links separated by line breaks. Images, logo links and other text in the blocks are not changed."
+
+msgid "plugins.themes.manuscriptDaffa.option.sidebarMenu.soft"
+msgstr "Light cards with icons (default)"
+
+msgid "plugins.themes.manuscriptDaffa.option.sidebarMenu.solid"
+msgstr "Buttons in the theme colour with icons"
+
+msgid "plugins.themes.manuscriptDaffa.option.sidebarMenu.off"
+msgstr "Off (links as written in the block)"

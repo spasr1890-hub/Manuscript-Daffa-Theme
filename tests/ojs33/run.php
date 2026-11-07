@@ -297,5 +297,56 @@ test('header logo height and position give the expected desktop CSS', function (
     same($css('full', 'left'), $css('full', 'center'), 'full width is the same for every position');
 });
 
+test('sidebar menu: link lists in the sidebar get icons, the current page is marked, the rest is left alone', function () {
+    $p = plugin();
+    $sidebar = '<div class="pkp_structure_sidebar left" role="complementary"><div class="pkp_block block_custom" id="customblock-menu"><div class="content">'
+        . '<p><img src="sinta.png" alt="SINTA"></p><p><a href="https://j.test/index.php/jt/index">Home</a></p><p>&nbsp;</p>'
+        . '<p><a href="https://j.test/index.php/jt/about/">About the Journal</a></p><p><strong><a href="/index.php/jt/fees">Author Fees</a></strong></p>'
+        . '<p><a href="https://j.test/index.php/jt/indexing">Abstracting &amp; Indexing</a></p></div></div>'
+        . '<div class="pkp_block block_custom"><div class="content"><p><a href="https://scholar.google.com"><img src="gs.png"></a></p>'
+        . '<p><a href="https://doaj.org"><img src="doaj.png"></a></p><p><a href="https://garuda.kemdikbud.go.id"><img src="garuda.png"></a></p></div></div>'
+        . '<div class="pkp_block block_information"><div class="content"><ul><li><a href="/r">For Readers</a></li><li><a href="/a">For Authors</a></li><li><a href="/l">For Librarians</a></li></ul></div></div>'
+        . '</div><!-- pkp_sidebar.left -->';
+    $main = '<div class="pkp_structure_main"><ul><li><a href="/x">Home</a></li><li><a href="/y">Contact</a></li></ul></div>';
+    $page = '<html><body>' . $main . $sidebar . '</body></html>';
+
+    $p->options = ['sidebarMenu' => 'soft'];
+    $out = $p->call('filterSidebarMenu', $page);
+    check(strpos($out, $main) !== false, 'lists outside the sidebar are not changed');
+    same(2, substr_count($out, '<ul class="msd_menu msd_menu_soft"'), 'two menus (custom block, Information block)');
+    check(strpos($out, '<img src="sinta.png" alt="SINTA">') !== false && strpos($out, '<p><a href="https://doaj.org"><img src="doaj.png"></a></p>') !== false, 'images and logo links kept');
+    check((bool) preg_match('~<a href="https://j.test/index.php/jt/about/" aria-current="page" class="msd_menu_link msd_i_info msd_menu_current">~', $out), 'current page marked (trailing slash ignored)');
+    same(1, substr_count($out, 'aria-current'), 'only one current link');
+    foreach (['home', 'fee', 'indexing', 'reader', 'guide', 'library'] as $icon) {
+        check(strpos($out, 'msd_i_' . $icon . '"') !== false || strpos($out, 'msd_i_' . $icon . ' ') !== false, 'icon ' . $icon);
+    }
+    check(strpos($out, '<span class="msd_menu_text">Abstracting &amp; Indexing</span>') !== false, 'link text kept');
+    check(strpos($out, '<p>&nbsp;</p>') === false, 'empty paragraph inside the run removed');
+
+    $p->options = ['sidebarMenu' => 'solid'];
+    check(strpos($p->call('filterSidebarMenu', $page), 'msd_menu msd_menu_solid') !== false, 'solid style');
+    $p->options = ['sidebarMenu' => 'off'];
+    same($page, $p->call('filterSidebarMenu', $page), 'off leaves the page alone');
+});
+
+test('sidebar menu: links separated by line breaks and icons from the link text', function () {
+    $p = plugin();
+    $p->options = [];
+    $page = '<div class="pkp_structure_sidebar left" role="complementary"><div class="content"><p><a href="/a">Beranda</a><br><a href="/b">Tim Redaksi</a><br />'
+        . "\n" . '<a href="/c">Hubungi Kami</a></p></div></div><!-- pkp_sidebar.left -->';
+    $out = $p->call('filterSidebarMenu', $page);
+    check(strpos($out, '<div class="content"><ul class="msd_menu msd_menu_soft"><li><a href="/a" class="msd_menu_link msd_i_home">') !== false, 'paragraph replaced by the menu: ' . $out);
+    check(strpos($out, '<br') === false && strpos($out, '<p>') === false, 'no breaks or paragraph left');
+    $expected = ['Home' => 'home', 'Focus and Scope' => 'focus', 'Editorial Team' => 'team', 'Peer Reviewers' => 'reviewers',
+        'Peer Review Process' => 'process', 'Publication Ethics' => 'ethics', 'Plagiarism Policy' => 'plagiarism', 'Author Guidelines' => 'guide',
+        'Author Fees' => 'fee', 'Article Processing Charge' => 'fee', 'Open Access Policy' => 'openAccess', 'Generative AI Policy' => 'ai',
+        'Copyright Notice' => 'copyright', 'Journal License' => 'license', 'Abstracting & Indexing' => 'indexing', 'Article Template' => 'template',
+        'Contact Us' => 'contact', 'Kebijakan Akses Terbuka' => 'openAccess', 'Mitra Bestari' => 'reviewers', 'Pedoman Penulis' => 'guide',
+        'Something else' => 'page'];
+    foreach ($expected as $text => $icon) {
+        same($icon, \MsdSideMenu::iconFor($text), $text);
+    }
+});
+
 echo "\n" . ($count - $failures) . " of {$count} tests passed\n";
 exit($failures ? 1 : 0);

@@ -51,6 +51,7 @@ Kode OJS 3.3 ada di folder `ojs33/` (hanya berkas yang berbeda); `tools/build-oj
 
 - **Tinggi logo header** (*Website → Appearance → Theme*): 80 px (bawaan Manuscript), 100, 120, 150 px, atau **selebar header** (banner di bawah menu pengguna). Hanya untuk layar 992 px ke atas; di layar kecil header tetap ringkas (logo maks. 30 px). Unggah logo sekitar dua kali ukuran tampil agar tajam, mis. 1650 × 160 px untuk 80 px, atau sekitar 2200 px lebar untuk banner selebar header.
 - **Posisi logo header** (kotak tepat di bawah *Tinggi logo header*): **Kiri** (bawaan), **Tengah**, atau **Kanan**. Tengah dan kanan menaruh logo di barisnya sendiri di bawah menu pengguna sehingga tidak bertumpuk. Hanya untuk layar 992 px ke atas, dan tidak berpengaruh pada pilihan *Selebar header* (logo sudah memenuhi lebar).
+- **Gaya menu sidebar** (*Website → Appearance → Theme*): daftar tautan di blok sidebar (mis. blok khusus berisi Home, Focus and Scope, Editorial Team, …) ditampilkan sebagai menu dengan ikon yang dipilih otomatis dari teks tautan (Inggris dan Indonesia, mis. *Author Fees* → kartu, *Contact Us*/*Hubungi Kami* → amplop; teks lain → ikon halaman), dan tautan halaman yang sedang dibuka disorot. Pilihan: **Kartu terang dengan ikon** (bawaan), **Tombol warna tema dengan ikon**, atau **Mati**. Dikenali: daftar `<ul><li><a>…</a></li></ul>`, tiga paragraf atau lebih yang masing-masing berisi satu tautan, atau tiga tautan atau lebih yang dipisah `<br>`. Gambar, tautan logo (Google Scholar, DOAJ, dll.) dan teks lain di blok tidak diubah. Ikon berupa gambar garis di CSS tema, tanpa Font Awesome atau berkas tambahan.
 
 - **Ukuran huruf daftar artikel** (*Website → Appearance → Theme*): Kecil, Sedang (bawaan), Besar, Sangat besar. Judul, nama penulis, nomor halaman, tombol aksi, dan abstrak pada daftar artikel (beranda, daftar isi terbitan, hasil pencarian) berubah bersama dengan satu faktor skala (`--msd-list-scale`, 0,9 / 1 / 1,12 / 1,25), jadi proporsinya tetap.
 
@@ -80,6 +81,7 @@ Kode OJS 3.3 ada di folder `ojs33/` (hanya berkas yang berbeda); `tools/build-oj
 | `classes/IssueStats.php` | Hitungan artikel, halaman, penulis, negara, penulis asing (cache 1 hari, diperbarui otomatis saat artikel terbitan berubah) |
 | `classes/Countries.php` | Nama negara sesuai bahasa, bendera lokal, tebakan negara dari afiliasi |
 | `classes/FileSizes.php` | Ukuran file untuk daftar file admin, beserta pemeriksaan hak akses |
+| `classes/SideMenu.php` | Menu sidebar dengan ikon dari daftar tautan di blok sidebar |
 | `classes/Html.php` | Fungsi bantu pengubah HTML |
 | `styles/manuscriptDaffa.css` | Gaya fitur baru (selain gaya Manuscript di `styles/*.less`) |
 | `js/manuscriptDaffa.js` | Show Abstract, Read more/Show less |

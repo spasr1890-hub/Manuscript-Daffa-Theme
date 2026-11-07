@@ -199,3 +199,18 @@ msgstr "Tengah"
 
 msgid "plugins.themes.manuscriptDaffa.option.headerLogoPosition.right"
 msgstr "Kanan"
+
+msgid "plugins.themes.manuscriptDaffa.option.sidebarMenu.label"
+msgstr "Gaya menu sidebar"
+
+msgid "plugins.themes.manuscriptDaffa.option.sidebarMenu.description"
+msgstr "Daftar tautan di blok sidebar (misalnya blok khusus berisi Home, Focus and Scope, Editorial Team, ...) ditampilkan sebagai menu dengan ikon yang dipilih dari teks tautan, dan tautan halaman yang sedang dibuka disorot. Dikenali: daftar (satu tautan per butir), tiga paragraf atau lebih yang masing-masing berisi satu tautan, atau tiga tautan atau lebih yang dipisah baris baru. Gambar, tautan logo, dan teks lain di blok tidak diubah."
+
+msgid "plugins.themes.manuscriptDaffa.option.sidebarMenu.soft"
+msgstr "Kartu terang dengan ikon (bawaan)"
+
+msgid "plugins.themes.manuscriptDaffa.option.sidebarMenu.solid"
+msgstr "Tombol warna tema dengan ikon"
+
+msgid "plugins.themes.manuscriptDaffa.option.sidebarMenu.off"
+msgstr "Mati (tautan seperti isi blok)"

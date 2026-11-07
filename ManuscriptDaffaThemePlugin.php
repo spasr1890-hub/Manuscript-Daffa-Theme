@@ -23,6 +23,7 @@ use APP\plugins\themes\manuscriptDaffa\classes\Countries;
 use APP\plugins\themes\manuscriptDaffa\classes\FileSizes;
 use APP\plugins\themes\manuscriptDaffa\classes\Html;
 use APP\plugins\themes\manuscriptDaffa\classes\IssueStats;
+use APP\plugins\themes\manuscriptDaffa\classes\SideMenu;
 use APP\submission\Submission;
 use APP\template\TemplateManager;
 use PKP\core\PKPString;
@@ -79,6 +80,9 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
 
     /** Choices of the header logo position option (desktop) */
     public const HEADER_LOGO_POSITIONS = ['left', 'center', 'right'];
+
+    /** Choices of the sidebar menu style option */
+    public const SIDEBAR_MENU_STYLES = ['soft', 'solid', 'off'];
 
     /** Font preloaded on public pages (must match the URL in styles/fonts.less) */
     public const PRELOAD_FONT = 'fonts/montserrat-v15-vietnamese_latin-ext_latin_cyrillic-ext_cyrillic-700.woff2';
@@ -179,6 +183,18 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
             'default' => 'left',
         ]);
 
+        // Lists of links in the sidebar blocks shown as a menu with icons
+        $this->addOption('sidebarMenu', 'FieldOptions', [
+            'type' => 'radio',
+            'label' => __('plugins.themes.manuscriptDaffa.option.sidebarMenu.label'),
+            'description' => __('plugins.themes.manuscriptDaffa.option.sidebarMenu.description'),
+            'options' => array_map(fn ($value) => [
+                'value' => $value,
+                'label' => __('plugins.themes.manuscriptDaffa.option.sidebarMenu.' . $value),
+            ], self::SIDEBAR_MENU_STYLES),
+            'default' => 'soft',
+        ]);
+
         // Dequeue any fonts loaded by parent theme
         if (method_exists($this, 'removeStyle')) {
             for ($i = 0; $i < 11; $i++) {
@@ -249,6 +265,9 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         }
         if ($name === 'articleListSize' && !isset(self::ARTICLE_LIST_SIZES[(string) $value])) {
             $value = 'medium';
+        }
+        if ($name === 'sidebarMenu' && !in_array((string) $value, self::SIDEBAR_MENU_STYLES, true)) {
+            $value = 'soft';
         }
         if ($name === 'headerLogoPosition' && !in_array((string) $value, self::HEADER_LOGO_POSITIONS, true)) {
             $value = 'left';
@@ -799,6 +818,7 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         if (str_contains($html, '<div class="obj_article_summary">')) {
             $steps[] = ['article action rows', 'actionRows', $this->filterArticleList(...)];
         }
+        $steps[] = ['sidebar menu', null, $this->filterSidebarMenu(...)];
         $steps[] = ['image loading', 'imageLoading', $this->filterImages(...)];
         $steps[] = ['meta description', 'metaDescription', $this->filterMetaDescription(...)];
         $steps[] = ['Open Graph', 'openGraph', $this->filterOpenGraph(...)];
@@ -1397,6 +1417,28 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
             'doi' => $this->doiOf($publication),
             'title' => $title,
         ];
+    }
+
+    /**
+     * Sidebar: lists of links in the blocks become a menu with icons
+     * (theme option "Sidebar menu style", see classes/SideMenu.php).
+     */
+    protected function filterSidebarMenu(string $html): string
+    {
+        $style = (string) $this->getOption('sidebarMenu');
+        if (!in_array($style, self::SIDEBAR_MENU_STYLES, true)) {
+            $style = 'soft';
+        }
+        if ($style === 'off') {
+            $this->report('sidebar menu', 'off in the theme settings');
+            return $html;
+        }
+        $menu = new SideMenu($style, (string) Application::get()->getRequest()->getRequestUrl());
+        $html = Html::region($html, '<div class="pkp_structure_sidebar', '</div><!-- pkp_sidebar.left -->', [$menu, 'apply']);
+        $this->report('sidebar menu', $menu->menus
+            ? sprintf('%d menus with %d links (%s)', $menu->menus, $menu->links, $style)
+            : 'no list of links found in the sidebar');
+        return $html;
     }
 
     /**
