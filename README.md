@@ -1,4 +1,4 @@
-# Manuscript-Daffa Theme untuk OJS 3.5
+# Manuscript-Daffa Theme untuk OJS 3.5 dan 3.3
 
 Child theme dari **Default Theme** OJS 3.5, dibangun dari [Manuscript (pkp/defaultManuscript)](https://github.com/pkp/defaultManuscript), cabang `stable-3_5_0`. Tampilan Manuscript (tata letak "kertas", font lokal Montserrat/Noto Serif) tetap, ditambah fitur di bawah. Tidak ada template inti OJS yang disalin: tema menyiapkan data saat halaman ditampilkan (`handleDisplay`) lalu mengubah HTML hasil template Default Theme lewat *output filter* Smarty. Tambahan aset: satu berkas CSS kecil (`styles/manuscriptDaffa.css`), satu skrip publik kecil (`js/manuscriptDaffa.js`), satu skrip admin (`js/manuscriptDaffaAdmin.js`), dan bendera SVG lokal. Tidak ada font eksternal.
 
@@ -11,6 +11,25 @@ Child theme dari **Default Theme** OJS 3.5, dibangun dari [Manuscript (pkp/defau
 3. (Opsional) Pilih **Negara asal jurnal** di halaman yang sama untuk menampilkan persentase penulis asing.
 
 Tema ini tidak bentrok dengan plugin Manuscript bawaan (`defaultManuscript`); keduanya bisa terpasang, yang dipakai adalah yang dipilih sebagai tema.
+
+## Versi untuk OJS 3.3
+
+Setiap rilis memuat dua berkas di halaman **Releases**:
+
+| OJS | Berkas |
+|---|---|
+| 3.4 / 3.5 | `manuscriptDaffa-<versi>.tar.gz` |
+| 3.3 (PHP 7.3–8.2) | `manuscriptDaffa-ojs3.3-<versi>.tar.gz` |
+
+Keduanya memasang folder `plugins/themes/manuscriptDaffa` dengan fitur yang sama dan nomor versi yang sama. Cara pasang di OJS 3.3 sama: *Website → Plugins → Upload A New Plugin* (atau *Upgrade*), lalu pilih tema di *Website → Appearance → Theme*. Perbedaan yang perlu diketahui di OJS 3.3:
+
+- Tampilan dasar mengikuti Manuscript untuk OJS 3.3 (cabang `stable-3_3_0`).
+- Afiliasi penulis di OJS 3.3 berupa satu teks; negara ditambahkan tepat setelah teks itu, sebelum ikon ROR bila ada.
+- DOI diambil dari plugin DOI OJS 3.3; nomor terbitan artikel dibaca dari `publication_settings` untuk statistik terbitan.
+- Cache statistik disimpan di `cache/manuscriptDaffa/` di folder OJS (OJS 3.3 belum punya cache dengan masa berlaku untuk plugin).
+- Sisi admin OJS 3.3 masih memakai *grid* lama; ukuran file dibaca dari baris *grid* daftar file di halaman workflow, dasbor penulis, dan reviewer.
+
+Kode OJS 3.3 ada di folder `ojs33/` (hanya berkas yang berbeda); `tools/build-ojs33.sh` menggabungkannya dengan berkas bersama (`js/`, `flags/`, `fonts/`, `styles/manuscriptDaffa.css`).
 
 ## Fitur
 
@@ -87,7 +106,8 @@ Tema ini tidak bentrok dengan plugin Manuscript bawaan (`defaultManuscript`); ke
   - sintaks PHP dan JavaScript, serta `php tests/run.php` (filter HTML dan fungsi bantu terhadap markup template Default Theme 3.5) di PHP 8.2, 8.3, dan 8.4;
   - `tests/smarty-filter.php` dengan Smarty 4.5.5 (versi OJS 3.5): memastikan nama *output filter* tema tidak bentrok dengan filter plugin lain;
   - `tests/check-templates.php` terhadap OJS `3_5_0-6` dan cabang `stable-3_5_0`: memastikan template OJS masih memuat markup yang dicari tema, sehingga perubahan template di rilis OJS berikutnya ketahuan sebelum tema dipasang; serta kompilasi LESS tema bersama Default Theme.
-- **Menjalankan uji sendiri:** `php tests/run.php`; `php tests/check-templates.php /path/ke/ojs`; `php tests/smarty-filter.php /path/ke/smarty/libs`.
+- **Build OJS 3.3:** uji `php tests/ojs33/run.php` di PHP 7.3, 7.4, 8.1, dan 8.2; `tools/check-php73.php` memastikan tidak ada sintaks yang lebih baru dari PHP 7.3; penanda template dan kompilasi LESS terhadap OJS `3_3_0-24` dan `stable-3_3_0`.
+- **Menjalankan uji sendiri:** `php tests/run.php`; `php tests/ojs33/run.php`; `php tests/check-templates.php /path/ke/ojs` (tambahkan `--ojs33` untuk OJS 3.3); `php tests/smarty-filter.php /path/ke/smarty/libs`; `tools/build-ojs33.sh <folder> [arsip.tar.gz]`.
 
 ## Lisensi
 

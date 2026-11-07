@@ -2,3 +2,6 @@
 /tests export-ignore
 /.github export-ignore
 /.gitattributes export-ignore
+# The OJS 3.3 build and the build tools are packed separately (release.yml)
+/ojs33 export-ignore
+/tools export-ignore

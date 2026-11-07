@@ -1,0 +1,186 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-11-06T00:00:00+00:00\n"
+"PO-Revision-Date: 2026-11-06T00:00:00+00:00\n"
+"Language: id_ID\n"
+
+msgid "plugins.themes.manuscriptDaffa.name"
+msgstr "Manuscript-Daffa"
+
+msgid "plugins.themes.manuscriptDaffa.description"
+msgstr "Child theme Manuscript yang ringan dari Default Theme dengan cakupan terbitan, negara penulis, tombol aksi artikel, badge kutipan, dan alat bantu sisi admin."
+
+msgid "plugins.themes.manuscriptDaffa.option.typography.montserrat_notoSerif"
+msgstr "Montserrat/Noto Serif"
+
+msgid "plugins.themes.manuscriptDaffa.option.accentColour.label"
+msgstr "Warna Aksen"
+
+msgid "plugins.themes.manuscriptDaffa.option.homeCountry.label"
+msgstr "Negara asal jurnal"
+
+msgid "plugins.themes.manuscriptDaffa.option.homeCountry.description"
+msgstr "Dipakai untuk menampilkan persentase penulis asing di kotak Cakupan Terbitan dan kartu Arsip. Biarkan kosong untuk menyembunyikannya."
+
+msgid "plugins.themes.manuscriptDaffa.option.homeCountry.textDescription"
+msgstr "Kode negara dua huruf jurnal, mis. ID untuk Indonesia. Biarkan kosong untuk menyembunyikan persentase penulis asing."
+
+msgid "plugins.themes.manuscriptDaffa.option.homeCountry.none"
+msgstr "(belum dipilih)"
+
+msgid "plugins.themes.manuscriptDaffa.list.showAbstract"
+msgstr "Tampilkan Abstrak"
+
+msgid "plugins.themes.manuscriptDaffa.list.hideAbstract"
+msgstr "Sembunyikan Abstrak"
+
+msgid "plugins.themes.manuscriptDaffa.list.downloadPdf"
+msgstr "Unduh PDF"
+
+msgid "plugins.themes.manuscriptDaffa.list.scholar"
+msgstr "Cek di Google Scholar"
+
+msgid "plugins.themes.manuscriptDaffa.home.readMore"
+msgstr "Selengkapnya"
+
+msgid "plugins.themes.manuscriptDaffa.home.showLess"
+msgstr "Tampilkan lebih sedikit"
+
+msgid "plugins.themes.manuscriptDaffa.coverage.title"
+msgstr "Cakupan Terbitan: {$authors} Penulis dari {$countries} Negara"
+
+msgid "plugins.themes.manuscriptDaffa.coverage.articles"
+msgstr "Artikel: {$count}"
+
+msgid "plugins.themes.manuscriptDaffa.coverage.pages"
+msgstr "Total halaman: {$count}"
+
+msgid "plugins.themes.manuscriptDaffa.coverage.foreign"
+msgstr "Penulis asing: {$count} ({$percent}%)"
+
+msgid "plugins.themes.manuscriptDaffa.coverage.authorCount"
+msgstr "({$count})"
+
+msgid "plugins.themes.manuscriptDaffa.archive.authors"
+msgstr "Penulis"
+
+msgid "plugins.themes.manuscriptDaffa.archive.countries"
+msgstr "Negara"
+
+msgid "plugins.themes.manuscriptDaffa.archive.articles"
+msgstr "Artikel"
+
+msgid "plugins.themes.manuscriptDaffa.archive.pages"
+msgstr "{$count} halaman"
+
+msgid "plugins.themes.manuscriptDaffa.archive.foreign"
+msgstr "{$percent}% asing"
+
+msgid "plugins.themes.manuscriptDaffa.categories.title"
+msgstr "Kategori"
+
+msgid "plugins.themes.manuscriptDaffa.categories.articles"
+msgstr "{$count} artikel di terbitan ini"
+
+msgid "plugins.themes.manuscriptDaffa.categories.viewAll"
+msgstr "Lihat semua artikel dalam kategori ini"
+
+msgid "plugins.themes.manuscriptDaffa.admin.selectAll"
+msgstr "Pilih Semua"
+
+msgid "plugins.themes.manuscriptDaffa.admin.clearSelection"
+msgstr "Batal Pilih"
+
+msgid "plugins.themes.manuscriptDaffa.admin.largeFile"
+msgstr "File besar (5 MB atau lebih), sering karena font tertanam di dokumen Word"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.label"
+msgstr "Tinggi logo header"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.description"
+msgstr "Tinggi logo di header pada layar desktop (lebar 992 px ke atas). Unggah logo sekitar dua kali ukuran yang dipilih agar tetap tajam; \"Selebar header\" paling cocok untuk banner lebar (sekitar 2200 px). Layar kecil selalu memakai header ringkas."
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.80"
+msgstr "80 px (bawaan)"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.100"
+msgstr "100 px"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.120"
+msgstr "120 px"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.150"
+msgstr "150 px"
+
+msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.full"
+msgstr "Selebar header (banner)"
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.label"
+msgstr "Ukuran huruf daftar artikel"
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.description"
+msgstr "Ukuran teks pada daftar artikel (beranda, daftar isi terbitan, hasil pencarian): judul, nama penulis, tombol aksi, dan abstrak berubah bersama."
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.small"
+msgstr "Kecil"
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.medium"
+msgstr "Sedang (bawaan)"
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.large"
+msgstr "Besar"
+
+msgid "plugins.themes.manuscriptDaffa.option.articleListSize.xlarge"
+msgstr "Sangat besar"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.label"
+msgstr "Fitur tema"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.description"
+msgstr "Matikan fitur yang tidak diinginkan. Fitur yang dimatikan tidak mengubah halaman dan tidak menjalankan kueri database. Fitur yang ditambahkan di versi berikutnya otomatis menyala."
+
+msgid "plugins.themes.manuscriptDaffa.option.features.authorCountry"
+msgstr "Negara di belakang afiliasi penulis (halaman artikel)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.dimensions"
+msgstr "Badge kutipan Dimensions di atas DOI (halaman artikel)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.coverage"
+msgstr "Kotak Cakupan Terbitan (halaman terbitan dan beranda)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.sortByPages"
+msgstr "Urutkan artikel menurut halaman awal (halaman terbitan dan beranda)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.homeFold"
+msgstr "Lipat terbitan terkini di beranda setelah 5 artikel (\"Selengkapnya\")"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.categories"
+msgstr "Kartu kategori di beranda"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.archiveCards"
+msgstr "Kartu statistik di halaman Arsip"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.actionRows"
+msgstr "Tombol aksi di daftar artikel (Abstrak, Unduh PDF, DOI, Google Scholar)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.metaDescription"
+msgstr "Deskripsi meta otomatis untuk mesin pencari"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.imageLoading"
+msgstr "Pengaturan pemuatan gambar (logo header lebih dulu, sidebar, footer dan sampul arsip ditunda)"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.adminSelectAll"
+msgstr "Admin: tombol \"Pilih Semua / Batal Pilih\""
+
+msgid "plugins.themes.manuscriptDaffa.option.features.adminFileSizes"
+msgstr "Admin: ukuran file di daftar file workflow dan reviewer"
+
+msgid "plugins.themes.manuscriptDaffa.option.features.openGraph"
+msgstr "Pratinjau tautan untuk WhatsApp, Facebook, dll. (tag Open Graph)"
