@@ -337,6 +337,15 @@ test('sidebar menu: the journal home link is current on .../index too', function
     check(\MsdSideMenu::normaliseUrl('https://aulad.org/index.php/aulad/about/submissions#authorGuidelines') === \MsdSideMenu::normaliseUrl('https://aulad.org/index.php/aulad/about/submissions'), 'anchor ignored');
 });
 
+test('sidebar menu: an icon chosen in the block wins over the link text', function () {
+    $menu = new \MsdSideMenu('soft', '');
+    $out = $menu->apply('<ul><li><a class="msd_i_stats" href="/a">Home</a></li><li><a href="/b" class="x msd_i_unknown">Contact Us</a></li>'
+        . '<li class="msd_i_reader"><a href="/c">Home</a></li></ul>');
+    check(strpos($out, '<a class="msd_i_stats msd_menu_link" href="/a">') !== false, 'chosen icon on the link kept, no second icon: ' . $out);
+    check(strpos($out, '<li class="msd_i_reader"><a href="/c" class="msd_menu_link">') !== false, 'chosen icon on the item kept, no second icon');
+    check(strpos($out, 'class="x msd_i_unknown msd_menu_link msd_i_contact"') !== false, 'unknown icon name: icon from the text');
+});
+
 test('sidebar menu: links separated by line breaks and icons from the link text', function () {
     $p = plugin();
     $p->options = [];

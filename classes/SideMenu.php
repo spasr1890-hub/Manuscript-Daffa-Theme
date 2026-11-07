@@ -12,7 +12,8 @@
  *  - <ul>/<ol> whose items each hold a single link;
  *  - three or more paragraphs in a row that each hold a single link;
  *  - three or more links separated by <br>.
- *  The icon is chosen from the link text (English and Indonesian words).
+ *  The icon is chosen from the link text (English and Indonesian words),
+ *  or in the block with class="msd_i_<icon>" on the <li> (or the link).
  *  Images, image links (indexing logos, badges) and other text are left
  *  alone.
  *
@@ -240,8 +241,15 @@ class SideMenu
             return null;
         }
 
-        $icon = preg_match('~\bclass\s*=\s*["\'][^"\']*\blocale_~i', $liAttributes) ? 'language' : self::iconFor($text);
-        $classes = 'msd_menu_link msd_i_' . $icon;
+        // An icon chosen in the block (class="msd_i_<icon>" on the item or
+        // the link) wins. OJS keeps classes on <li> (allowed_html).
+        if (preg_match('~\bclass\s*=\s*["\'][^"\']*\bmsd_i_([a-zA-Z]+)\b~', $liAttributes . ' ' . $attributes, $chosen)
+            && ($chosen[1] === self::DEFAULT_ICON || isset(self::ICONS[$chosen[1]]))) {
+            $classes = 'msd_menu_link';
+        } else {
+            $icon = preg_match('~\bclass\s*=\s*["\'][^"\']*\blocale_~i', $liAttributes) ? 'language' : self::iconFor($text);
+            $classes = 'msd_menu_link msd_i_' . $icon;
+        }
         if (preg_match('~\shref\s*=\s*(["\'])(.*?)\1~is', $attributes, $href) && $this->current !== ''
             && self::normaliseUrl(html_entity_decode($href[2], ENT_QUOTES | ENT_HTML5, 'UTF-8')) === $this->current
             && !preg_match('~\saria-current\s*=~i', $attributes)) {
