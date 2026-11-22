@@ -98,9 +98,6 @@ msgstr "Select all"
 msgid "plugins.themes.manuscriptDaffa.admin.clearSelection"
 msgstr "Clear selection"
 
-msgid "plugins.themes.manuscriptDaffa.admin.largeFile"
-msgstr "Large file (5 MB or more), often caused by fonts embedded in a Word document"
-
 msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.label"
 msgstr "Header logo height"
 
@@ -178,9 +175,6 @@ msgstr "Image loading hints (header logo first, lazy sidebar, footer and archive
 
 msgid "plugins.themes.manuscriptDaffa.option.features.adminSelectAll"
 msgstr "Back end: \"Select all / Clear selection\" buttons"
-
-msgid "plugins.themes.manuscriptDaffa.option.features.adminFileSizes"
-msgstr "Back end: file sizes in the workflow and reviewer file lists"
 
 msgid "plugins.themes.manuscriptDaffa.option.features.openGraph"
 msgstr "Link previews for WhatsApp, Facebook and others (Open Graph tags)"

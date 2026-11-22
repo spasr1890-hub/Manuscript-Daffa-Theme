@@ -24,7 +24,6 @@ import('lib.pkp.classes.plugins.ThemePlugin');
 require_once __DIR__ . '/classes/MsdHtml.inc.php';
 require_once __DIR__ . '/classes/MsdCountries.inc.php';
 require_once __DIR__ . '/classes/MsdIssueStats.inc.php';
-require_once __DIR__ . '/classes/MsdFileSizes.inc.php';
 require_once __DIR__ . '/classes/MsdSideMenu.inc.php';
 
 class ManuscriptDaffaThemePlugin extends ThemePlugin
@@ -37,9 +36,6 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
 
     /** Flags shown on an Archives card before "+N" */
     public const ARCHIVE_FLAG_LIMIT = 6;
-
-    /** Files from this size (bytes) are marked in the back end file lists */
-    public const LARGE_FILE_BYTES = 5 * 1024 * 1024;
 
     /**
      * Features that can be switched off in Website > Appearance > Theme.
@@ -59,7 +55,6 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         'openGraph',
         'imageLoading',
         'adminSelectAll',
-        'adminFileSizes',
     ];
 
     /** Request parameter for managers: recompute the issue statistics now */
@@ -82,9 +77,6 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
 
     /** Script of the Dimensions citation badge */
     public const DIMENSIONS_SCRIPT = 'https://badge.dimensions.ai/badge.js';
-
-    /** Request parameter of the back end file size lookup */
-    public const FILE_SIZE_PARAM = 'manuscriptDaffaFileSizes';
 
     /** Image hosts of visitor counters that must not be lazy-loaded */
     public const COUNTER_PATTERN = '~flagcounter|statcounter|histats|clustrmaps|whos\.amung|revolvermaps|hitwebcounter|freecounter|free-counter|counter\.|/counter|supercounters|amazingcounters|website-hit-counters|visitor-?map|livetraffic|statsy|hitcounter~i';
@@ -444,7 +436,7 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
     }
 
     /**
-     * Back end script (select all buttons, file sizes). Only for logged-in
+     * Back end script (select all buttons). Only for logged-in
      * users and only in the back end.
      */
     protected function addAdminScript(): void
@@ -455,25 +447,12 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         }
 
         $config = [
-            'sizeUrl' => $request->getDispatcher()->url(
-                $request,
-                ROUTE_PAGE,
-                $request->getContext()->getPath(),
-                'about',
-                'aboutThisPublishingSystem',
-                null,
-                [self::FILE_SIZE_PARAM => 1]
-            ),
-            'sizeParam' => self::FILE_SIZE_PARAM,
-            'largeBytes' => self::LARGE_FILE_BYTES,
             'features' => [
                 'selectAll' => $this->featureEnabled('adminSelectAll'),
-                'fileSizes' => $this->featureEnabled('adminFileSizes'),
             ],
             'labels' => [
                 'selectAll' => __('plugins.themes.manuscriptDaffa.admin.selectAll'),
                 'clearSelection' => __('plugins.themes.manuscriptDaffa.admin.clearSelection'),
-                'large' => __('plugins.themes.manuscriptDaffa.admin.largeFile'),
             ],
         ];
 
@@ -500,13 +479,6 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         $templateMgr = $args[0];
         $template = (string) $args[1];
         $request = Application::get()->getRequest();
-
-        // Back end file size lookup (answered instead of the page)
-        if ($request->getUserVar(self::FILE_SIZE_PARAM) !== null) {
-            $output = &$args[2];
-            $output = $this->fileSizeResponse();
-            return true;
-        }
 
         if (!str_starts_with($template, 'frontend/')) {
             return false;
@@ -580,36 +552,6 @@ class ManuscriptDaffaThemePlugin extends ThemePlugin
         $templateMgr->registerFilter('output', [$this, 'filterOutput'], 'manuscriptDaffa');
 
         return false;
-    }
-
-    /**
-     * JSON answer of the back end file size lookup.
-     */
-    protected function fileSizeResponse(): string
-    {
-        $request = Application::get()->getRequest();
-        $sizes = null;
-        if (!$this->featureEnabled('adminFileSizes')) {
-            if (!headers_sent()) {
-                header('Content-Type: application/json; charset=utf-8');
-                header('Cache-Control: no-store, private');
-            }
-            return json_encode(['sizes' => (object) []]);
-        }
-        try {
-            $sizes = MsdFileSizes::forSubmission((int) $request->getUserVar('submissionId'));
-        } catch (Throwable $e) {
-            error_log('manuscriptDaffa file sizes: ' . $e->getMessage());
-        }
-        if (!headers_sent()) {
-            header('Content-Type: application/json; charset=utf-8');
-            header('Cache-Control: no-store, private');
-            header('X-Robots-Tag: noindex');
-            if ($sizes === null) {
-                http_response_code(403);
-            }
-        }
-        return json_encode(['sizes' => (object) ($sizes ?? [])]);
     }
 
     protected function prepareArticle(TemplateManager $templateMgr): void

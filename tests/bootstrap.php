@@ -352,7 +352,7 @@ namespace {
     }
 
     $root = dirname(__DIR__);
-    foreach (['classes/Html.php', 'classes/Countries.php', 'classes/IssueStats.php', 'classes/FileSizes.php', 'classes/SideMenu.php', 'ManuscriptDaffaThemePlugin.php'] as $file) {
+    foreach (['classes/Html.php', 'classes/Countries.php', 'classes/IssueStats.php', 'classes/SideMenu.php', 'ManuscriptDaffaThemePlugin.php'] as $file) {
         require_once $root . '/' . $file;
     }
 }
