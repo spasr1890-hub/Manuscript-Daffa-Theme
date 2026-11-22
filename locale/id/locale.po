@@ -98,9 +98,6 @@ msgstr "Pilih Semua"
 msgid "plugins.themes.manuscriptDaffa.admin.clearSelection"
 msgstr "Batal Pilih"
 
-msgid "plugins.themes.manuscriptDaffa.admin.largeFile"
-msgstr "File besar (5 MB atau lebih), sering karena font tertanam di dokumen Word"
-
 msgid "plugins.themes.manuscriptDaffa.option.headerLogoHeight.label"
 msgstr "Tinggi logo header"
 
@@ -178,9 +175,6 @@ msgstr "Pengaturan pemuatan gambar (logo header lebih dulu, sidebar, footer dan 
 
 msgid "plugins.themes.manuscriptDaffa.option.features.adminSelectAll"
 msgstr "Admin: tombol \"Pilih Semua / Batal Pilih\""
-
-msgid "plugins.themes.manuscriptDaffa.option.features.adminFileSizes"
-msgstr "Admin: ukuran file di daftar file workflow dan reviewer"
 
 msgid "plugins.themes.manuscriptDaffa.option.features.openGraph"
 msgstr "Pratinjau tautan untuk WhatsApp, Facebook, dll. (tag Open Graph)"
